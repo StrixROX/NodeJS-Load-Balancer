@@ -34,23 +34,23 @@
           },
           body: msgInput.value,
           signal: controller.signal,
-        }).then((response) => {
+        }).then(async (response) => {
           const streamReader = response.body.getReader();
           const logDisplayElement = document.createElement("div");
 
           responseLogArea.appendChild(logDisplayElement);
 
-          streamReader.read().then(function pump({ done, value }) {
-            logDisplayElement.textContent += new TextDecoder("UTF-8").decode(
-              value
-            );
+          const textDecoder = new TextDecoder("utf-8");
 
-            if (!done) {
-              return streamReader.read().then(pump);
-            } else {
-              responseLogArea.appendChild(document.createElement("br"));
-            }
-          });
+          let keepReading = true;
+          while (keepReading) {
+            await streamReader.read().then(({ done, value }) => {
+              logDisplayElement.textContent += textDecoder.decode(value);
+              keepReading = !done;
+            });
+          }
+
+          responseLogArea.appendChild(document.createElement("br"));
         });
       });
 

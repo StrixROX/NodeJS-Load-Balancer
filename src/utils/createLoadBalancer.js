@@ -96,6 +96,11 @@ function createLoadBalancer(
         `🔷 [ ${hostname} #${serverId} ] Listening on port ${port}...`
       );
     },
+    close: () => {
+      console.log(`♦️ [ ${hostname} #${serverId} ] Server closed`);
+
+      server.close();
+    },
   };
 }
 

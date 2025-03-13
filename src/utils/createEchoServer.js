@@ -1,9 +1,39 @@
 const http = require("http");
+const appAssert = require("./appAssert");
 
 const RESPONSE_DELAY = 0;
 const RESPONSE_CHUNK_DELAY = 20;
 
-function createEchoServer({ serverId, hostname, ip, port }) {
+function createEchoServer(serverArgs) {
+  appAssert(
+    serverArgs !== undefined,
+    "Failed to create server",
+    "serverArgs was not passed\nserverArgs: { serverId: Number, hostname: String, ip: String, port: Number }"
+  );
+
+  const { serverId, hostname, ip, port } = serverArgs;
+
+  appAssert(
+    serverId !== undefined,
+    "Failed to create server",
+    "serverId is required in serverArgs"
+  );
+  appAssert(
+    hostname !== undefined,
+    "Failed to create server",
+    "hostname is required in serverArgs"
+  );
+  appAssert(
+    ip !== undefined,
+    "Failed to create server",
+    "ip is required in serverArgs"
+  );
+  appAssert(
+    port !== undefined,
+    "Failed to create server",
+    "port is required in serverArgs"
+  );
+
   const server = http.createServer((req, res) => {
     if (req.method !== "POST") {
       res.statusCode = 400;
@@ -36,6 +66,12 @@ function createEchoServer({ serverId, hostname, ip, port }) {
         });
       }
     });
+
+    req.on("end", () => {
+      promiseChain.then(() => {
+        res.end("");
+      });
+    });
   });
 
   console.log(
@@ -53,6 +89,11 @@ function createEchoServer({ serverId, hostname, ip, port }) {
       console.log(
         `🟢 [ ${hostname} #${serverId} ] Listening on port ${port}...`
       );
+    },
+    close: () => {
+      server.close();
+
+      console.log(`🔴 [ ${hostname} #${serverId} ] Server closed`);
     },
   };
 }

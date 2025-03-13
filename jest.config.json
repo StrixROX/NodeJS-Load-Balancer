@@ -1,0 +1,10 @@
+{
+  "collectCoverage": true,
+  "collectCoverageFrom": ["src/**/!(*.test).js"],
+  "coverageDirectory": "./coverage",
+  "coverageReporters": ["lcov", "text"],
+  "testMatch": ["**/(*.test).js"],
+  "transformIgnorePatterns": ["!node_modules/"],
+  "verbose": true,
+  "detectOpenHandles": true
+}
