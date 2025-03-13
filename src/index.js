@@ -1,9 +1,9 @@
-import RoundRobinLoadBalancer from "./LoadBalancer/variants/RoundRobin.js";
-import createEchoServer from "./utils/createLocalServer.js";
-import ServerPool from "./utils/ServerPool.js";
+const RoundRobinLoadBalancer = require("./LoadBalancer/variants/RoundRobin.js");
+const createEchoServer = require("./utils/createLocalServer.js");
+const ServerPool = require("./utils/ServerPool.js");
 
 const pool = new ServerPool();
-const POOL_SIZE = 4;
+const POOL_SIZE = 5;
 
 for (let i = 0; i < POOL_SIZE; i++) {
   pool.addServer(

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My App</title>
+  </head>
+  <body>
+    <h1>My App</h1>
+    <h3>Talk to my server:</h3>
+    <textarea id="msgInput">Hello, how are you?</textarea>
+    <button id="sendButton">Send</button>
+    <pre id="responseArea"></pre>
+
+    <script>
+      const msgInput = document.getElementById("msgInput");
+      const sendButton = document.getElementById("sendButton");
+      const responseArea = document.getElementById("responseArea");
+
+      let controller = null;
+
+      sendButton.addEventListener("click", () => {
+        if (controller) {
+          controller.abort();
+        }
+
+        controller = new AbortController();
+        fetch("/server", {
+          method: "POST",
+          headers: {
+            "Content-Type": "text/plain",
+          },
+          body: msgInput.value,
+          signal: controller.signal,
+        }).then((response) => {
+          responseArea.textContent = "";
+
+          const streamReader = response.body.getReader();
+          streamReader.read().then(function pump({ done, value }) {
+            responseArea.textContent += new TextDecoder("UTF-8").decode(value);
+
+            if (!done) {
+              return streamReader.read().then(pump);
+            }
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -36,4 +36,4 @@ class ServerPool {
   }
 }
 
-export default ServerPool;
+module.exports = ServerPool;

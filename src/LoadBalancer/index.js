@@ -1,1 +1,3 @@
-export { default as RoundRobinLoadBalancer } from "./variants/RoundRobin.js";
+module.exports = {
+  RoundRobinLoadBalancer: require("./variants/RoundRobin.js"),
+};
