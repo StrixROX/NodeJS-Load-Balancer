@@ -10,12 +10,14 @@
     <h3>Talk to my server:</h3>
     <textarea id="msgInput">Hello, how are you?</textarea>
     <button id="sendButton">Send</button>
-    <pre id="responseArea"></pre>
+    <button id="clearButton">Clear Log</button>
+    <pre id="responseLogArea"></pre>
 
     <script>
       const msgInput = document.getElementById("msgInput");
       const sendButton = document.getElementById("sendButton");
-      const responseArea = document.getElementById("responseArea");
+      const clearButton = document.getElementById("clearButton");
+      const responseLogArea = document.getElementById("responseLogArea");
 
       let controller = null;
 
@@ -33,17 +35,27 @@
           body: msgInput.value,
           signal: controller.signal,
         }).then((response) => {
-          responseArea.textContent = "";
-
           const streamReader = response.body.getReader();
+          const logDisplayElement = document.createElement("div");
+
+          responseLogArea.appendChild(logDisplayElement);
+
           streamReader.read().then(function pump({ done, value }) {
-            responseArea.textContent += new TextDecoder("UTF-8").decode(value);
+            logDisplayElement.textContent += new TextDecoder("UTF-8").decode(
+              value
+            );
 
             if (!done) {
               return streamReader.read().then(pump);
+            } else {
+              responseLogArea.appendChild(document.createElement("br"));
             }
           });
         });
+      });
+
+      clearButton.addEventListener("click", () => {
+        responseLogArea.textContent = "";
       });
     </script>
   </body>
