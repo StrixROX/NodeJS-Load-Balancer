@@ -48,11 +48,11 @@ class RoundRobinLoadBalancer {
         // POST "/server"
 
         const serverFromPool = this._getServer();
-        const { address, port } = serverFromPool.address();
+        const { hostname, port } = serverFromPool;
 
         const proxyReq = http.request(
           {
-            host: address !== "::" ? address : "localhost",
+            host: hostname,
             port: port,
             path: req.url,
             method: req.method,
@@ -80,13 +80,19 @@ class RoundRobinLoadBalancer {
       }
     });
 
-    server.listen(this.port);
-
     console.log(
-      `🔷 Load Balancer created - ${this.hostname} #${this.serverId}\n[${this.ip}:${this.port}] Listening on port ${this.port}...\n`
+      `\x1b[32m✔\x1b[0m [ OK ] Load Balancer (Round Robin) created - ${this.hostname} #${this.serverId}`
     );
 
-    return server;
+    return {
+      start: () => {
+        server.listen(this.port);
+
+        console.log(
+          `🔷 [ ${this.hostname} #${this.serverId} ] Listening on port ${this.port}...`
+        );
+      },
+    };
   }
 }
 

@@ -38,19 +38,23 @@ function createEchoServer({ serverId, hostname, ip, port }) {
     });
   });
 
-  server.listen(port);
-
-  // add custom props to server object
-  server.id = serverId;
-  server.hostname = hostname;
-  server.ip = ip;
-  server.port = port;
-
   console.log(
-    `🟢 Server created - ${hostname} #${serverId}\n[${ip}:${port}] Listening on port ${port}...\n`
+    `\x1b[32m✔\x1b[0m [ OK ] Server created - ${hostname} #${serverId}`
   );
 
-  return server;
+  return {
+    id: serverId,
+    hostname,
+    ip,
+    port,
+    start: () => {
+      server.listen(port);
+
+      console.log(
+        `🟢 [ ${hostname} #${serverId} ] Listening on port ${port}...`
+      );
+    },
+  };
 }
 
 module.exports = createEchoServer;
