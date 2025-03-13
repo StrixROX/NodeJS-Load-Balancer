@@ -17,7 +17,7 @@ function createEchoServer({ serverId, hostname, ip, port }) {
     res.setHeader("Content-Type", "text/plain");
     res.setHeader("Transfer-Encoding", "chunked");
 
-    res.write(`[server #${serverId}]\nI Received:\n`);
+    res.write(`[server #${serverId}] I Received: `);
 
     // let promiseChain = Promise.resolve(null);
     let promiseChain = new Promise((resolve) =>
