@@ -1,6 +1,8 @@
-const RoundRobinLoadBalancer = require("./LoadBalancer/variants/RoundRobin.js");
-const createEchoServer = require("./utils/createLocalServer.js");
 const ServerPool = require("./utils/ServerPool.js");
+const createEchoServer = require("./utils/createLocalServer.js");
+const createLoadBalancer = require("./utils/createLoadBalancer.js");
+
+const RoundRobinAlgorithm = require("./LoadBalancerAlgorithms/RoundRobin.js");
 
 const pool = new ServerPool();
 const POOL_SIZE = 5;
@@ -15,16 +17,11 @@ for (let i = 0; i < POOL_SIZE; i++) {
   pool.addServer(server);
 }
 
-console.log();
+const loadBalancer = createLoadBalancer(
+  pool,
+  { serverId: 0, hostname: "localhost", ip: "127.0.0.1", port: 3000 },
+  RoundRobinAlgorithm
+);
 
-const loadBalancer = new RoundRobinLoadBalancer(pool, {
-  serverId: 0,
-  hostname: "localhost",
-  ip: "127.0.0.1",
-  port: 3000,
-});
-
-console.log();
 pool.servers.forEach((server) => server.start());
-console.log();
-loadBalancer.server.start();
+loadBalancer.start();
