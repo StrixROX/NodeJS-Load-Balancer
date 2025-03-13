@@ -1,10 +1,7 @@
 import http from "http";
 
-function createLocalServer(port, serverId) {
-  const IP = "127.0.0.1";
-  const HOSTNAME = "localhost";
-
-  const server = http.createServer((req, res) => {
+function createEchoServer({ serverId, hostname, ip, port }) {
+  const server = http.createServer(async (req, res) => {
     if (req.method !== "POST") {
       res.statusCode = 400;
       res.setHeader("Content-Type", "text/plain");
@@ -15,27 +12,25 @@ function createLocalServer(port, serverId) {
 
     res.statusCode = 200;
     res.setHeader("Content-Type", "text/plain");
+    res.setHeader("Transfer-Encoding", "chunked");
 
     res.write("I Received: ");
-
-    req.on("data", (chunk) => res.write(chunk));
-
-    req.on("end", () => res.end());
+    req.pipe(res);
   });
 
   server.listen(port);
 
   // add custom props to server object
   server.id = serverId;
-  server.hostname = HOSTNAME;
-  server.ip = IP;
+  server.hostname = hostname;
+  server.ip = ip;
   server.port = port;
 
   console.log(
-    `Server created - ${HOSTNAME} #${serverId}\n[${IP}:${port}] Listening on port ${port}...\n`
+    `🟢 Server created - ${hostname} #${serverId}\n[${ip}:${port}] Listening on port ${port}...\n`
   );
 
   return server;
 }
 
-export default createLocalServer;
+export default createEchoServer;

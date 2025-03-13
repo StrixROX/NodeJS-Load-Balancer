@@ -1,6 +1,10 @@
 class ServerPool {
   servers = [];
 
+  get size() {
+    return this.servers.length;
+  }
+
   addServer(server) {
     // check if server already exists
     if (
