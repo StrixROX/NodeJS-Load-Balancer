@@ -18,7 +18,9 @@ for (let i = 0; i < POOL_SIZE; i++) {
 }
 
 const loadBalancerAlgorithm =
-  LoadBalancingAlgorithms.WeightedRoundRobinLoadBalancer([1, 2, 1, 1, 1]);
+  // LoadBalancingAlgorithms.RoundRobinLoadBalancer();
+  // LoadBalancingAlgorithms.WeightedRoundRobinLoadBalancer([1, 2, 1, 1, 1]);
+  LoadBalancingAlgorithms.LeastConnectionLoadBalancer();
 
 const loadBalancer = createLoadBalancer(
   { serverId: 0, hostname: "localhost", ip: "127.0.0.1", port: 5000 },

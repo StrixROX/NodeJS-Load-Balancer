@@ -34,7 +34,11 @@ function createEchoServer(serverArgs) {
     "port is required in serverArgs"
   );
 
+  let connectionCount = 0;
+
   const server = http.createServer((req, res) => {
+    connectionCount++;
+
     if (req.method !== "POST") {
       res.statusCode = 400;
       res.setHeader("Content-Type", "text/plain");
@@ -72,6 +76,10 @@ function createEchoServer(serverArgs) {
         res.end("");
       });
     });
+
+    res.on("close", () => {
+      connectionCount--;
+    });
   });
 
   console.log(
@@ -83,6 +91,7 @@ function createEchoServer(serverArgs) {
     hostname,
     ip,
     port,
+    getConnectionCount: () => connectionCount,
     start: () => {
       server.listen(port);
 

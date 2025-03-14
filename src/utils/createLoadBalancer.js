@@ -91,6 +91,10 @@ function createLoadBalancer(serverArgs, serverPool, getNextServerIndex) {
         (proxyRes) => {
           res.writeHead(proxyRes.statusCode, proxyRes.headers);
           proxyRes.pipe(res);
+
+          proxyRes.on("end", () => {
+            res.end();
+          });
         }
       );
 

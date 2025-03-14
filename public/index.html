@@ -8,7 +8,10 @@
   <body>
     <h1>My App</h1>
     <h3>Talk to my server:</h3>
-    <textarea id="msgInput">Hello, how are you?</textarea>
+    <!-- <textarea id="msgInput">Hello, how are you?</textarea> -->
+    <textarea id="msgInput">
+arnmodwpbcfnpkkdghtikbneqyxuzhcdlfcpijdeldiytmnwclqawndxievhorlyxdrajuqesutwrlgdcstgmekifiurxpdxdaol</textarea
+    >
     <button id="sendButton">Send</button>
     <button id="clearButton">Clear Log</button>
     <pre id="responseLogArea"></pre>
@@ -37,18 +40,26 @@
         }).then(async (response) => {
           const streamReader = response.body.getReader();
           const logDisplayElement = document.createElement("div");
+          logDisplayElement.style.maxWidth = "600px";
+          logDisplayElement.style.overflow = "hidden";
+          logDisplayElement.style.textOverflow = "ellipsis";
+          logDisplayElement.style.whiteSpace = "nowrap";
 
           responseLogArea.appendChild(logDisplayElement);
 
           const textDecoder = new TextDecoder("utf-8");
 
+          let data = "";
           let keepReading = true;
           while (keepReading) {
             await streamReader.read().then(({ done, value }) => {
               logDisplayElement.textContent += textDecoder.decode(value);
+              data += textDecoder.decode(value);
               keepReading = !done;
             });
           }
+
+          logDisplayElement.title = data;
         });
       });
 
