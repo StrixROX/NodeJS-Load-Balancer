@@ -1,6 +1,6 @@
 {
   "collectCoverage": true,
-  "collectCoverageFrom": ["src/**/!(*.test).js"],
+  "collectCoverageFrom": ["src/**/!(*.test).js", "!src/index.js"],
   "coverageDirectory": "./coverage",
   "coverageReporters": ["lcov", "text"],
   "testMatch": ["**/(*.test).js"],
