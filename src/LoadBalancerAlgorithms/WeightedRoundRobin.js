@@ -1,13 +1,13 @@
 function generator(serverWeights) {
-  let requestQueueSize = 0;
+  let serverCallCount = 0;
 
   return function getNextServerIndex(serverPool, currentServerIndex) {
-    if (requestQueueSize < serverWeights[currentServerIndex] - 1) {
-      requestQueueSize++;
+    serverCallCount++;
 
+    if (serverCallCount < serverWeights[currentServerIndex]) {
       return currentServerIndex;
-    } else if (requestQueueSize === serverWeights[currentServerIndex] - 1) {
-      requestQueueSize = 0;
+    } else {
+      serverCallCount = 0;
 
       return (currentServerIndex + 1) % serverPool.size;
     }
