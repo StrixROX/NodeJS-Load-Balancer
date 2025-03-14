@@ -1,33 +1,59 @@
 const http = require("node:http");
 const fs = require("node:fs");
 const path = require("node:path");
+const appAssert = require("./appAssert");
 
-function createLoadBalancer(
-  serverPool,
-  { serverId, hostname, ip, port },
-  getNextServerIndex
-) {
+function createLoadBalancer(serverArgs, serverPool, getNextServerIndex) {
   let currentServerIndex = 0;
 
-  const _getNextServer = () => {
-    if (!getNextServerIndex) {
-      throw new Error(
-        "Failed to handle request: getNextServerIndex method is not defined"
-      );
-    }
-
-    if (!serverPool) {
-      throw new Error("Failed to handle request: serverPool is not defined");
-    }
-
-    const { server, nextServerIndex } = getNextServerIndex(
-      serverPool,
-      currentServerIndex
+  function getServer() {
+    appAssert(
+      serverPool !== undefined,
+      "Unable to find servers",
+      "serverPool (ServerPool) was not passed"
     );
+
+    appAssert(
+      getNextServerIndex !== undefined,
+      "Unable to find servers",
+      "getNextServerIndex ((serverPool: ServerPool, currentServerIndex: Number) => Number) was not passed"
+    );
+
+    const server = serverPool.servers[currentServerIndex];
+    const nextServerIndex = getNextServerIndex(serverPool, currentServerIndex);
     currentServerIndex = nextServerIndex;
 
     return server;
-  };
+  }
+
+  appAssert(
+    serverArgs !== undefined,
+    "Failed to create server",
+    "serverArgs was not passed\nserverArgs: { serverId: Number, hostname: String, ip: String, port: Number }"
+  );
+
+  const { serverId, hostname, ip, port } = serverArgs;
+
+  appAssert(
+    serverId !== undefined,
+    "Failed to create server",
+    "serverId is required in serverArgs"
+  );
+  appAssert(
+    hostname !== undefined,
+    "Failed to create server",
+    "hostname is required in serverArgs"
+  );
+  appAssert(
+    ip !== undefined,
+    "Failed to create server",
+    "ip is required in serverArgs"
+  );
+  appAssert(
+    port !== undefined,
+    "Failed to create server",
+    "port is required in serverArgs"
+  );
 
   const server = http.createServer((req, res) => {
     if (req.method === "GET" && req.url === "/") {
@@ -38,9 +64,9 @@ function createLoadBalancer(
         (err, data) => {
           if (err) {
             console.log(err);
-            res.statusCode = 500;
+            res.statusCode = 404;
             res.setHeader("Content-Type", "text/plain");
-            res.end("Error 500: Internal Server Error");
+            res.end("Error 404: Not Found");
           } else {
             res.statusCode = 200;
             res.setHeader("Content-Type", "text/html");
@@ -51,7 +77,7 @@ function createLoadBalancer(
     } else if (req.method === "POST" && req.url === "/server") {
       // POST "/server"
 
-      const serverFromPool = _getNextServer();
+      const serverFromPool = getServer();
       const { hostname, port } = serverFromPool;
 
       const proxyReq = http.request(
@@ -89,6 +115,10 @@ function createLoadBalancer(
   );
 
   return {
+    id: serverId,
+    hostname,
+    ip,
+    port,
     start: () => {
       server.listen(port);
 

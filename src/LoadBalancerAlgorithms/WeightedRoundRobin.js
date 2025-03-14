@@ -5,17 +5,11 @@ function generator(serverWeights) {
     if (requestQueueSize < serverWeights[currentServerIndex] - 1) {
       requestQueueSize++;
 
-      return {
-        server: serverPool.servers[currentServerIndex],
-        nextServerIndex: currentServerIndex,
-      };
+      return currentServerIndex;
     } else if (requestQueueSize === serverWeights[currentServerIndex] - 1) {
       requestQueueSize = 0;
 
-      return {
-        server: serverPool.servers[currentServerIndex],
-        nextServerIndex: (currentServerIndex + 1) % serverPool.size,
-      };
+      return (currentServerIndex + 1) % serverPool.size;
     }
   };
 }

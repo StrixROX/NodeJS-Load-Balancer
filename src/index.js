@@ -21,8 +21,8 @@ const loadBalancerAlgorithm =
   LoadBalancingAlgorithms.WeightedRoundRobinLoadBalancer([1, 2, 1, 1, 1]);
 
 const loadBalancer = createLoadBalancer(
-  pool,
   { serverId: 0, hostname: "localhost", ip: "127.0.0.1", port: 5000 },
+  pool,
   loadBalancerAlgorithm
 );
 
