@@ -61,9 +61,9 @@ function createLoadBalancer(serverArgs, serverPool, getNextServerIndex) {
 
       fs.readFile(
         path.join(__dirname, "../../public/index.html"),
-        (err, data) => {
-          if (err) {
-            console.log(err);
+        (error, data) => {
+          if (error) {
+            console.error(error);
             res.statusCode = 404;
             res.setHeader("Content-Type", "text/plain");
             res.end("Error 404: Not Found");
