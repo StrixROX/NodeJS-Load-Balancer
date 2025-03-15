@@ -1,5 +1,5 @@
-const http = require("http");
-const appAssert = require("./appAssert");
+const http = require('http');
+const appAssert = require('./appAssert');
 
 const RESPONSE_DELAY = 0;
 const RESPONSE_CHUNK_DELAY = 20;
@@ -7,36 +7,36 @@ const RESPONSE_CHUNK_DELAY = 20;
 function createEchoServer(serverArgs) {
   appAssert(
     serverArgs !== undefined,
-    "Failed to create server",
-    "serverArgs was not passed\nserverArgs: { serverId: Number, hostname: String, ip: String, port: Number }"
+    'Failed to create server',
+    'serverArgs was not passed\nserverArgs: { serverId: Number, hostname: String, ip: String, port: Number }'
   );
 
   const { serverId, hostname, ip, port, allowOrigin } = serverArgs;
 
   appAssert(
     serverId !== undefined,
-    "Failed to create server",
-    "serverId is required in serverArgs"
+    'Failed to create server',
+    'serverId is required in serverArgs'
   );
   appAssert(
     hostname !== undefined,
-    "Failed to create server",
-    "hostname is required in serverArgs"
+    'Failed to create server',
+    'hostname is required in serverArgs'
   );
   appAssert(
     ip !== undefined,
-    "Failed to create server",
-    "ip is required in serverArgs"
+    'Failed to create server',
+    'ip is required in serverArgs'
   );
   appAssert(
     port !== undefined,
-    "Failed to create server",
-    "port is required in serverArgs"
+    'Failed to create server',
+    'port is required in serverArgs'
   );
   appAssert(
     allowOrigin !== undefined,
-    "Failed to create server",
-    "allowOrigin is required in serverArgs"
+    'Failed to create server',
+    'allowOrigin is required in serverArgs'
   );
 
   let connectionCount = 0;
@@ -46,13 +46,13 @@ function createEchoServer(serverArgs) {
 
     if (req.headers.origin !== allowOrigin) {
       res.statusCode = 403;
-      res.setHeader("Content-Type", "text/plain");
-      res.end("Error 403: Forbidden");
-    } else if (req.method === "POST" && req.url === "/") {
+      res.setHeader('Content-Type', 'text/plain');
+      res.end('Error 403: Forbidden');
+    } else if (req.method === 'POST' && req.url === '/') {
       res.statusCode = 200;
-      res.setHeader("Content-Type", "text/plain");
-      res.setHeader("access-control-allow-origin", allowOrigin);
-      res.setHeader("Transfer-Encoding", "chunked");
+      res.setHeader('Content-Type', 'text/plain');
+      res.setHeader('access-control-allow-origin', allowOrigin);
+      res.setHeader('Transfer-Encoding', 'chunked');
 
       res.write(`[server #${serverId}] I Received: `);
 
@@ -61,7 +61,7 @@ function createEchoServer(serverArgs) {
         setTimeout(resolve, RESPONSE_DELAY)
       );
 
-      req.on("data", (chunk) => {
+      req.on('data', (chunk) => {
         for (let i of chunk) {
           promiseChain = promiseChain.then(() => {
             return new Promise((resolve) => {
@@ -74,19 +74,19 @@ function createEchoServer(serverArgs) {
         }
       });
 
-      req.on("end", () => {
+      req.on('end', () => {
         promiseChain.then(() => {
-          res.end("");
+          res.end('');
         });
       });
     } else {
       res.statusCode = 400;
-      res.setHeader("Content-Type", "text/plain");
-      res.setHeader("access-control-allow-origin", allowOrigin);
-      res.end("Error 400: Bad Request");
+      res.setHeader('Content-Type', 'text/plain');
+      res.setHeader('access-control-allow-origin', allowOrigin);
+      res.end('Error 400: Bad Request');
     }
 
-    res.on("close", () => {
+    res.on('close', () => {
       connectionCount--;
       req.socket.destroy();
     });

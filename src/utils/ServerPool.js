@@ -1,4 +1,4 @@
-const appAssert = require("./appAssert");
+const appAssert = require('./appAssert');
 
 class ServerPool {
   servers = [];
@@ -11,8 +11,8 @@ class ServerPool {
     // check if server already exists
     appAssert(
       !!!this.servers.find((existingServer) => existingServer.id === server.id),
-      "Failed to add server",
-      "server with same id already exists"
+      'Failed to add server',
+      'server with same id already exists'
     );
 
     // add server
@@ -23,7 +23,7 @@ class ServerPool {
     // check if server exists
     appAssert(
       !!this.servers.find((existingServer) => existingServer.id === serverId),
-      "Failed to remove server",
+      'Failed to remove server',
       `server with id ${serverId} does not exist`
     );
 

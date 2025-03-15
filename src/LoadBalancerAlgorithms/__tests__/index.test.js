@@ -1,7 +1,7 @@
-const LoadBalancerAlgorithms = require("../index.js");
+const LoadBalancerAlgorithms = require('../index.js');
 
-describe("Load Balancing Algorithms - RoundRobin", () => {
-  it("cycles through all the servers in the pool", () => {
+describe('Load Balancing Algorithms - RoundRobin', () => {
+  it('cycles through all the servers in the pool', () => {
     const roundRobin = LoadBalancerAlgorithms.RoundRobinLoadBalancer();
 
     const mockServerPool = {
@@ -19,8 +19,8 @@ describe("Load Balancing Algorithms - RoundRobin", () => {
   });
 });
 
-describe("Load Balancing Algorithms - WeightedRoundRobin", () => {
-  it("functions same as RoundRobin when all servers have the same weight", () => {
+describe('Load Balancing Algorithms - WeightedRoundRobin', () => {
+  it('functions same as RoundRobin when all servers have the same weight', () => {
     const mockServerPool = {
       servers: [
         { id: 1, getConnectionsSync: () => 0 },
@@ -48,7 +48,7 @@ describe("Load Balancing Algorithms - WeightedRoundRobin", () => {
     );
   });
 
-  it("sends more requests to servers with higher weights", () => {
+  it('sends more requests to servers with higher weights', () => {
     const mockServerPool = {
       servers: [
         { id: 1, getConnectionsSync: () => 0 },
@@ -70,8 +70,8 @@ describe("Load Balancing Algorithms - WeightedRoundRobin", () => {
   });
 });
 
-describe("Load Balancing Algorithms - LeastConnection", () => {
-  it("functions same as RoundRobin when all servers have the same number of connections", () => {
+describe('Load Balancing Algorithms - LeastConnection', () => {
+  it('functions same as RoundRobin when all servers have the same number of connections', () => {
     const roundRobin = LoadBalancerAlgorithms.RoundRobinLoadBalancer();
 
     const leastConnection =
@@ -122,7 +122,7 @@ describe("Load Balancing Algorithms - LeastConnection", () => {
     expect(leastConnection(mockServerPool)).toBe(roundRobin(mockServerPool, 2));
   });
 
-  it("sends requests to the server with lowest number of connections", () => {
+  it('sends requests to the server with lowest number of connections', () => {
     const leastConnection =
       LoadBalancerAlgorithms.LeastConnectionLoadBalancer();
 

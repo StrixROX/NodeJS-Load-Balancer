@@ -17,40 +17,40 @@ arnmodwpbcfnpkkdghtikbneqyxuzhcdlfcpijdeldiytmnwclqawndxievhorlyxdrajuqesutwrlgd
     <pre id="responseLogArea"></pre>
 
     <script>
-      const msgInput = document.getElementById("msgInput");
-      const sendButton = document.getElementById("sendButton");
-      const clearButton = document.getElementById("clearButton");
-      const responseLogArea = document.getElementById("responseLogArea");
+      const msgInput = document.getElementById('msgInput');
+      const sendButton = document.getElementById('sendButton');
+      const clearButton = document.getElementById('clearButton');
+      const responseLogArea = document.getElementById('responseLogArea');
 
       let controller = null;
 
-      sendButton.addEventListener("click", () => {
+      sendButton.addEventListener('click', () => {
         if (controller) {
           controller.abort();
         }
 
         controller = new AbortController();
-        fetch("http://localhost:5000/", {
-          method: "POST",
+        fetch('http://localhost:5000/', {
+          method: 'POST',
           headers: {
-            "Content-Type": "text/plain",
+            'Content-Type': 'text/plain',
           },
           body: msgInput.value,
           signal: controller.signal,
         })
           .then(async (response) => {
             const streamReader = response.body.getReader();
-            const logDisplayElement = document.createElement("div");
-            logDisplayElement.style.maxWidth = "600px";
-            logDisplayElement.style.overflow = "hidden";
-            logDisplayElement.style.textOverflow = "ellipsis";
-            logDisplayElement.style.whiteSpace = "nowrap";
+            const logDisplayElement = document.createElement('div');
+            logDisplayElement.style.maxWidth = '600px';
+            logDisplayElement.style.overflow = 'hidden';
+            logDisplayElement.style.textOverflow = 'ellipsis';
+            logDisplayElement.style.whiteSpace = 'nowrap';
 
             responseLogArea.appendChild(logDisplayElement);
 
-            const textDecoder = new TextDecoder("utf-8");
+            const textDecoder = new TextDecoder('utf-8');
 
-            let data = "";
+            let data = '';
             let keepReading = true;
             while (keepReading) {
               await streamReader.read().then(({ done, value }) => {
@@ -63,14 +63,14 @@ arnmodwpbcfnpkkdghtikbneqyxuzhcdlfcpijdeldiytmnwclqawndxievhorlyxdrajuqesutwrlgd
             logDisplayElement.title = data;
           })
           .catch((error) => {
-            if (error.name !== "AbortError") {
+            if (error.name !== 'AbortError') {
               console.error(error);
             }
           });
       });
 
-      clearButton.addEventListener("click", () => {
-        responseLogArea.textContent = "";
+      clearButton.addEventListener('click', () => {
+        responseLogArea.textContent = '';
       });
     </script>
   </body>

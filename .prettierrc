@@ -1,0 +1,9 @@
+{
+  "experimentalTernaries": false,
+  "experimentalOperatorPosition": "end",
+  "tabWidth": 2,
+  "singleQuote": true,
+  "jsxSingleQuote": true,
+  "bracketSameLine": false,
+  "singleAttributePerLine": false
+}

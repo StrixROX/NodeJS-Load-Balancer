@@ -1,7 +1,9 @@
 {
-  "version": "1.0.0",
+  "name": "nodejs-load-balancer",
+  "version": "2.0.0",
   "scripts": {
-    "start": "nodemon ./src/index.js",
+    "start": "node ./src/index.js",
+    "dev": "nodemon ./src/index.js",
     "test": "jest"
   },
   "devDependencies": {
