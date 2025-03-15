@@ -10,6 +10,24 @@ const server = createEchoServer({
 beforeAll(() => server.start());
 afterAll(() => server.close());
 
+const readResponseToEnd = async (response) => {
+  const reader = response.body.getReader();
+
+  const textDecoder = new TextDecoder("utf-8");
+
+  let data = "";
+  let keepReading = true;
+  while (keepReading) {
+    await reader.read().then(({ done, value }) => {
+      const res = textDecoder.decode(value);
+      data += res;
+      keepReading = !done;
+    });
+  }
+
+  return data;
+};
+
 describe("createEchoServer", () => {
   it("Throws error when invalid args are passed", () => {
     expect(() => createEchoServer()).toThrow("serverArgs was not passed");
@@ -29,49 +47,47 @@ describe("createEchoServer", () => {
     ).toThrow("port is required");
   });
 
-  it("Throws Error 400 when request method is not POST", () => {
-    return new Promise(async (resolve, reject) => {
-      await fetch(`http://${server.hostname}:${server.port}`, {
-        method: "GET",
-      })
-        .then((response) => {
-          expect(response.status).toBe(400);
-          expect(response.statusText).toBe("Bad Request");
-        })
-        .catch((error) => reject(error));
+  it("Correctly gives connection count", async () => {
+    expect(server.getConnectionCount()).toBe(0);
 
-      await fetch(`http://${server.hostname}:${server.port}`, {
-        method: "PUT",
-        body: "helloworld",
-      })
-        .then((response) => {
-          expect(response.status).toBe(400);
-          expect(response.statusText).toBe("Bad Request");
-        })
-        .catch((error) => reject(error));
+    await fetch(`http://${server.hostname}:${server.port}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain",
+      },
+      body: "helloworldahdasasdhjdasjdajadsajdashjasdhdashjashkasdhashasdhjsadh",
+    })
+      .then(async (response) => {
+        expect(server.getConnectionCount()).toBe(1);
 
-      await fetch(`http://${server.hostname}:${server.port}`, {
-        method: "PATCH",
-        body: "helloworld",
+        return await readResponseToEnd(response);
       })
-        .then((response) => {
-          expect(response.status).toBe(400);
-          expect(response.statusText).toBe("Bad Request");
-        })
-        .catch((error) => reject(error));
+      .then(() => {
+        expect(server.getConnectionCount()).toBe(0);
+      });
+  });
 
-      await fetch(`http://${server.hostname}:${server.port}`, {
-        method: "DELETE",
-        body: "helloworld",
-      })
-        .then((response) => {
-          expect(response.status).toBe(400);
-          expect(response.statusText).toBe("Bad Request");
-        })
-        .catch((error) => reject(error));
+  it("Throws Error 400 when request method is not POST", (done) => {
+    const promiseArr = [];
 
-      resolve();
-    });
+    for (let i of ["GET", "PUT", "PATCH", "DELETE"]) {
+      promiseArr.push(
+        fetch(`http://${server.hostname}:${server.port}`, {
+          method: i,
+        })
+          .then(async (response) => {
+            expect(response.status).toBe(400);
+            expect(response.statusText).toBe("Bad Request");
+
+            return await readResponseToEnd(response);
+          })
+          .then((data) => {
+            expect(data).toBe("Error 400: Bad Request");
+          })
+      );
+    }
+
+    Promise.all(promiseArr).then(() => done());
   });
 
   it("Streams data back to client", () => {
@@ -84,22 +100,7 @@ describe("createEchoServer", () => {
         expect(response.headers.get("Content-Type")).toBe("text/plain");
         expect(response.headers.get("Transfer-Encoding")).toBe("chunked");
 
-        const reader = response.body.getReader();
-
-        const textDecoder = new TextDecoder("UTF-8");
-
-        // next chunks are the data
-        let data = "";
-        let keepReading = true;
-        while (keepReading) {
-          await reader.read().then(({ done, value }) => {
-            const res = textDecoder.decode(value);
-            data += res;
-            keepReading = !done;
-          });
-        }
-
-        return data;
+        return await readResponseToEnd(response);
       })
       .then((data) => {
         expect(data).toBe(`[server #${server.id}] I Received: helloworld`);
