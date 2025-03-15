@@ -4,7 +4,7 @@ const path = require("node:path");
 const appAssert = require("./appAssert");
 
 function createLoadBalancer(serverArgs, serverPool, getNextServerIndex) {
-  let currentServerIndex = 0;
+  let currentServerIndex = -1;
 
   function getServer() {
     appAssert(
@@ -19,11 +19,9 @@ function createLoadBalancer(serverArgs, serverPool, getNextServerIndex) {
       "getNextServerIndex ((serverPool: ServerPool, currentServerIndex: Number) => Number) was not passed"
     );
 
-    const server = serverPool.servers[currentServerIndex];
-    const nextServerIndex = getNextServerIndex(serverPool, currentServerIndex);
-    currentServerIndex = nextServerIndex;
+    currentServerIndex = getNextServerIndex(serverPool, currentServerIndex);
 
-    return server;
+    return serverPool.servers[currentServerIndex];
   }
 
   appAssert(

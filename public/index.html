@@ -37,30 +37,36 @@ arnmodwpbcfnpkkdghtikbneqyxuzhcdlfcpijdeldiytmnwclqawndxievhorlyxdrajuqesutwrlgd
           },
           body: msgInput.value,
           signal: controller.signal,
-        }).then(async (response) => {
-          const streamReader = response.body.getReader();
-          const logDisplayElement = document.createElement("div");
-          logDisplayElement.style.maxWidth = "600px";
-          logDisplayElement.style.overflow = "hidden";
-          logDisplayElement.style.textOverflow = "ellipsis";
-          logDisplayElement.style.whiteSpace = "nowrap";
+        })
+          .then(async (response) => {
+            const streamReader = response.body.getReader();
+            const logDisplayElement = document.createElement("div");
+            logDisplayElement.style.maxWidth = "600px";
+            logDisplayElement.style.overflow = "hidden";
+            logDisplayElement.style.textOverflow = "ellipsis";
+            logDisplayElement.style.whiteSpace = "nowrap";
 
-          responseLogArea.appendChild(logDisplayElement);
+            responseLogArea.appendChild(logDisplayElement);
 
-          const textDecoder = new TextDecoder("utf-8");
+            const textDecoder = new TextDecoder("utf-8");
 
-          let data = "";
-          let keepReading = true;
-          while (keepReading) {
-            await streamReader.read().then(({ done, value }) => {
-              logDisplayElement.textContent += textDecoder.decode(value);
-              data += textDecoder.decode(value);
-              keepReading = !done;
-            });
-          }
+            let data = "";
+            let keepReading = true;
+            while (keepReading) {
+              await streamReader.read().then(({ done, value }) => {
+                logDisplayElement.textContent += textDecoder.decode(value);
+                data += textDecoder.decode(value);
+                keepReading = !done;
+              });
+            }
 
-          logDisplayElement.title = data;
-        });
+            logDisplayElement.title = data;
+          })
+          .catch((error) => {
+            if (error.name !== "AbortError") {
+              console.error(error);
+            }
+          });
       });
 
       clearButton.addEventListener("click", () => {
