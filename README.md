@@ -64,6 +64,7 @@ npm test src/*
 - Create a web-socket based interface to monitor network health
 - Add health-check functionality
 - Increase network throughput
-  - Create a variant which operates in the Network Layer (OSI model)
+  - Create a variant which operates in the Transport Layer (OSI Layer 4)
   - Try using HTTP/2 via `http2` module
 - Implement an SSL layer using `https` module.
+- Port to TypeScript
