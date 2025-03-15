@@ -6,9 +6,9 @@ describe("Load Balancing Algorithms - RoundRobin", () => {
 
     const mockServerPool = {
       servers: [
-        { id: 1, getConnectionCount: () => 2 },
-        { id: 2, getConnectionCount: () => 1 },
-        { id: 3, getConnectionCount: () => 3 },
+        { id: 1, getConnectionsSync: () => 2 },
+        { id: 2, getConnectionsSync: () => 1 },
+        { id: 3, getConnectionsSync: () => 3 },
       ],
       size: 3,
     };
@@ -23,9 +23,9 @@ describe("Load Balancing Algorithms - WeightedRoundRobin", () => {
   it("functions same as RoundRobin when all servers have the same weight", () => {
     const mockServerPool = {
       servers: [
-        { id: 1, getConnectionCount: () => 0 },
-        { id: 2, getConnectionCount: () => 0 },
-        { id: 3, getConnectionCount: () => 0 },
+        { id: 1, getConnectionsSync: () => 0 },
+        { id: 2, getConnectionsSync: () => 0 },
+        { id: 3, getConnectionsSync: () => 0 },
       ],
       size: 3,
     };
@@ -51,9 +51,9 @@ describe("Load Balancing Algorithms - WeightedRoundRobin", () => {
   it("sends more requests to servers with higher weights", () => {
     const mockServerPool = {
       servers: [
-        { id: 1, getConnectionCount: () => 0 },
-        { id: 2, getConnectionCount: () => 0 },
-        { id: 3, getConnectionCount: () => 0 },
+        { id: 1, getConnectionsSync: () => 0 },
+        { id: 2, getConnectionsSync: () => 0 },
+        { id: 3, getConnectionsSync: () => 0 },
       ],
       size: 3,
     };
@@ -81,9 +81,9 @@ describe("Load Balancing Algorithms - LeastConnection", () => {
 
     mockServerPool = {
       servers: [
-        { id: 1, getConnectionCount: () => 0 },
-        { id: 2, getConnectionCount: () => 0 },
-        { id: 3, getConnectionCount: () => 0 },
+        { id: 1, getConnectionsSync: () => 0 },
+        { id: 2, getConnectionsSync: () => 0 },
+        { id: 3, getConnectionsSync: () => 0 },
       ],
       size: 3,
     };
@@ -93,9 +93,9 @@ describe("Load Balancing Algorithms - LeastConnection", () => {
 
     mockServerPool = {
       servers: [
-        { id: 1, getConnectionCount: () => 1 },
-        { id: 2, getConnectionCount: () => 0 },
-        { id: 3, getConnectionCount: () => 0 },
+        { id: 1, getConnectionsSync: () => 1 },
+        { id: 2, getConnectionsSync: () => 0 },
+        { id: 3, getConnectionsSync: () => 0 },
       ],
       size: 3,
     };
@@ -103,9 +103,9 @@ describe("Load Balancing Algorithms - LeastConnection", () => {
 
     mockServerPool = {
       servers: [
-        { id: 1, getConnectionCount: () => 1 },
-        { id: 2, getConnectionCount: () => 1 },
-        { id: 3, getConnectionCount: () => 0 },
+        { id: 1, getConnectionsSync: () => 1 },
+        { id: 2, getConnectionsSync: () => 1 },
+        { id: 3, getConnectionsSync: () => 0 },
       ],
       size: 3,
     };
@@ -113,9 +113,9 @@ describe("Load Balancing Algorithms - LeastConnection", () => {
 
     mockServerPool = {
       servers: [
-        { id: 1, getConnectionCount: () => 1 },
-        { id: 2, getConnectionCount: () => 1 },
-        { id: 3, getConnectionCount: () => 1 },
+        { id: 1, getConnectionsSync: () => 1 },
+        { id: 2, getConnectionsSync: () => 1 },
+        { id: 3, getConnectionsSync: () => 1 },
       ],
       size: 3,
     };
@@ -130,9 +130,9 @@ describe("Load Balancing Algorithms - LeastConnection", () => {
 
     mockServerPool = {
       servers: [
-        { id: 1, getConnectionCount: () => 1 },
-        { id: 2, getConnectionCount: () => 1 },
-        { id: 3, getConnectionCount: () => 2 },
+        { id: 1, getConnectionsSync: () => 1 },
+        { id: 2, getConnectionsSync: () => 1 },
+        { id: 3, getConnectionsSync: () => 2 },
       ],
       size: 3,
     };
@@ -140,9 +140,9 @@ describe("Load Balancing Algorithms - LeastConnection", () => {
 
     mockServerPool = {
       servers: [
-        { id: 1, getConnectionCount: () => 1 },
-        { id: 2, getConnectionCount: () => 2 },
-        { id: 3, getConnectionCount: () => 1 },
+        { id: 1, getConnectionsSync: () => 1 },
+        { id: 2, getConnectionsSync: () => 2 },
+        { id: 3, getConnectionsSync: () => 1 },
       ],
       size: 3,
     };
@@ -150,9 +150,9 @@ describe("Load Balancing Algorithms - LeastConnection", () => {
 
     mockServerPool = {
       servers: [
-        { id: 1, getConnectionCount: () => 1 },
-        { id: 2, getConnectionCount: () => 2 },
-        { id: 3, getConnectionCount: () => 2 },
+        { id: 1, getConnectionsSync: () => 1 },
+        { id: 2, getConnectionsSync: () => 2 },
+        { id: 3, getConnectionsSync: () => 2 },
       ],
       size: 3,
     };
@@ -160,9 +160,9 @@ describe("Load Balancing Algorithms - LeastConnection", () => {
 
     mockServerPool = {
       servers: [
-        { id: 1, getConnectionCount: () => 2 },
-        { id: 2, getConnectionCount: () => 1 },
-        { id: 3, getConnectionCount: () => 1 },
+        { id: 1, getConnectionsSync: () => 2 },
+        { id: 2, getConnectionsSync: () => 1 },
+        { id: 3, getConnectionsSync: () => 1 },
       ],
       size: 3,
     };
@@ -170,9 +170,9 @@ describe("Load Balancing Algorithms - LeastConnection", () => {
 
     mockServerPool = {
       servers: [
-        { id: 1, getConnectionCount: () => 2 },
-        { id: 2, getConnectionCount: () => 2 },
-        { id: 3, getConnectionCount: () => 1 },
+        { id: 1, getConnectionsSync: () => 2 },
+        { id: 2, getConnectionsSync: () => 2 },
+        { id: 3, getConnectionsSync: () => 1 },
       ],
       size: 3,
     };

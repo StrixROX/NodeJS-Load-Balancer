@@ -8,18 +8,21 @@ const s1 = createEchoServer({
   hostname: "localhost",
   ip: "127.0.0.1",
   port: 3000,
+  allowOrigin: "http://localhost:5000",
 });
 const s2 = createEchoServer({
   serverId: 2,
   hostname: "localhost",
   ip: "127.0.0.1",
   port: 3001,
+  allowOrigin: "http://localhost:5000",
 });
 const s3 = createEchoServer({
   serverId: 3,
   hostname: "localhost",
   ip: "127.0.0.1",
   port: 3002,
+  allowOrigin: "http://localhost:5000",
 });
 
 describe("ServerPool", () => {

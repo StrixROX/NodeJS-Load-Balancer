@@ -5,10 +5,25 @@ const server = createEchoServer({
   hostname: "localhost",
   ip: "127.0.0.1",
   port: 3000,
+  allowOrigin: "http://localhost:5000",
 });
 
-beforeAll(() => server.start());
-afterAll(() => server.close());
+const server2 = createEchoServer({
+  serverId: 2,
+  hostname: "localhost",
+  ip: "127.0.0.1",
+  port: 3001,
+  allowOrigin: "http://localhost:5000",
+});
+
+beforeAll(() => {
+  server.start();
+  server2.start();
+});
+afterAll(() => {
+  server.close();
+  server2.close();
+});
 
 const readResponseToEnd = async (response) => {
   const reader = response.body.getReader();
@@ -48,23 +63,30 @@ describe("createEchoServer", () => {
   });
 
   it("Correctly gives connection count", async () => {
-    expect(server.getConnectionsSync()).toBe(0);
+    expect(server2.getConnectionsSync()).toBe(0);
+    expect(await server2.getConnections()).toBe(0);
 
-    await fetch(`http://${server.hostname}:${server.port}`, {
+    await fetch(`http://${server2.hostname}:${server2.port}`, {
       method: "POST",
       headers: {
         "Content-Type": "text/plain",
+        origin: "http://localhost:5000",
       },
       body: "helloworldahdasasdhjdasjdajadsajdashjasdhdashjashkasdhashasdhjsadh",
     })
       .then(async (response) => {
-        expect(server.getConnectionsSync()).toBe(1);
+        expect(server2.getConnectionsSync()).toBe(1);
+        expect(await server2.getConnections()).toBe(1);
 
         return await readResponseToEnd(response);
       })
-      .then(() => {
-        expect(server.getConnectionsSync()).toBe(0);
+      .then(async () => {
+        expect(server2.getConnectionsSync()).toBe(0);
+        expect(await server2.getConnections()).toBe(0);
       });
+
+    expect(server2.getConnectionsSync()).toBe(0);
+    expect(await server2.getConnections()).toBe(0);
   });
 
   it("Throws Error 400 when request method is not POST", (done) => {
@@ -74,6 +96,9 @@ describe("createEchoServer", () => {
       promiseArr.push(
         fetch(`http://${server.hostname}:${server.port}`, {
           method: i,
+          headers: {
+            origin: "http://localhost:5000",
+          },
         })
           .then(async (response) => {
             expect(response.status).toBe(400);
@@ -93,6 +118,9 @@ describe("createEchoServer", () => {
   it("Streams data back to client", () => {
     return fetch(`http://${server.hostname}:${server.port}`, {
       method: "POST",
+      headers: {
+        origin: "http://localhost:5000",
+      },
       body: "helloworld",
     })
       .then(async (response) => {
@@ -105,5 +133,22 @@ describe("createEchoServer", () => {
       .then((data) => {
         expect(data).toBe(`[server #${server.id}] I Received: helloworld`);
       });
+  });
+
+  it("Throws Error 403 when origin is not allowed", () => {
+    return fetch(`http://${server.hostname}:${server.port}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain",
+        origin: "http://localhost:5001",
+      },
+      body: "helloworld",
+    }).then(async (response) => {
+      expect(response.status).toBe(403);
+      expect(response.headers.get("Content-Type")).toBe("text/plain");
+      expect(response.statusText).toBe("Forbidden");
+
+      return await readResponseToEnd(response);
+    });
   });
 });

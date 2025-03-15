@@ -1,16 +1,6 @@
-const fs = require("node:fs");
-
 const createLoadBalancer = require("../createLoadBalancer.js");
 const createEchoServer = require("../createEchoServer.js");
 const ServerPool = require("../ServerPool.js");
-
-jest.mock("node:fs", () => {
-  return {
-    readFile: jest.fn((filePath, callback) => {
-      return callback(null, "");
-    }),
-  };
-});
 
 const serverPool = new ServerPool();
 serverPool.addServer(
@@ -19,6 +9,7 @@ serverPool.addServer(
     hostname: "localhost",
     ip: "127.0.0.1",
     port: 3001,
+    allowOrigin: "http://localhost:5000",
   })
 );
 
@@ -28,6 +19,7 @@ const loadBalancer = createLoadBalancer(
     hostname: "localhost",
     ip: "127.0.0.1",
     port: 5000,
+    allowOrigin: "http://localhost:8080",
   },
   serverPool,
   () => 0
@@ -74,6 +66,16 @@ describe("createLoadBalancer", () => {
         ip: "127.0.0.1",
         port: 5000,
       })
+    ).toThrow("allowOrigin is required in serverArgs");
+
+    expect(() =>
+      createLoadBalancer({
+        serverId: 0,
+        hostname: "localhost",
+        ip: "127.0.0.1",
+        port: 5000,
+        allowOrigin: "http://localhost:8080",
+      })
     ).toThrow("serverPool (ServerPool) was not passed");
 
     expect(() =>
@@ -83,6 +85,7 @@ describe("createLoadBalancer", () => {
           hostname: "localhost",
           ip: "127.0.0.1",
           port: 5000,
+          allowOrigin: "http://localhost:8080",
         },
         serverPool
       )
@@ -91,39 +94,15 @@ describe("createLoadBalancer", () => {
     );
   });
 
-  it("Returns the test webpage when GET request is made to /", () => {
-    return fetch(`http://${loadBalancer.hostname}:${loadBalancer.port}`).then(
-      (response) => {
-        expect(response.status).toBe(200);
-        expect(response.headers.get("Content-Type")).toBe("text/html");
-      }
-    );
-  });
-
-  it("Returns Error 400 when anything but GET request is made to /", () => {
-    return fetch(`http://${loadBalancer.hostname}:${loadBalancer.port}/server`)
-      .then((response) => {
-        expect(response.status).toBe(400);
-        expect(response.headers.get("Content-Type")).toBe("text/plain");
-
-        return response.text();
-      })
-      .then((data) => {
-        expect(data).toBe("Error 400: Bad Request");
-      });
-  });
-
-  it("Returns response from server #1 when POST request is made to /server", () => {
-    return fetch(
-      `http://${loadBalancer.hostname}:${loadBalancer.port}/server`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "text/plain",
-        },
-        body: "helloworld",
-      }
-    )
+  it("Returns response from server #1 when POST request is made to /", () => {
+    return fetch(`http://${loadBalancer.hostname}:${loadBalancer.port}/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain",
+        origin: "http://localhost:8080",
+      },
+      body: "helloworld",
+    })
       .then(async (response) => {
         expect(response.status).toBe(200);
         expect(response.headers.get("Content-Type")).toBe("text/plain");
@@ -150,41 +129,17 @@ describe("createLoadBalancer", () => {
       });
   });
 
-  it("Throws Error 404 when fs fails to read file while trying GET /", () => {
-    fs.readFile.mockImplementationOnce((filePath, callback) => {
-      callback(new Error(`Failed to read file: ${filePath}`), null);
-    });
-
-    return fetch(`http://${loadBalancer.hostname}:${loadBalancer.port}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "text/plain",
-      },
-    })
-      .then((response) => {
-        expect(response.status).toBe(404);
-        expect(response.headers.get("Content-Type")).toBe("text/plain");
-
-        return response.text();
-      })
-      .then((data) => {
-        expect(data).toBe("Error 404: Not Found");
-      });
-  });
-
   it("Throws Error 500 when load balancer cannot reach any server for response", () => {
     serverPool.servers.forEach((server) => server.close());
 
-    return fetch(
-      `http://${loadBalancer.hostname}:${loadBalancer.port}/server`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "text/plain",
-        },
-        body: "helloworld",
-      }
-    )
+    return fetch(`http://${loadBalancer.hostname}:${loadBalancer.port}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain",
+        origin: "http://localhost:8080",
+      },
+      body: "helloworld",
+    })
       .then((response) => {
         expect(response.status).toBe(500);
         expect(response.headers.get("Content-Type")).toBe("text/plain");
@@ -193,6 +148,45 @@ describe("createLoadBalancer", () => {
       })
       .then((data) => {
         expect(data).toBe("Error 500: Internal Server Error");
+      });
+  });
+
+  it("Throws Error 403 when origin is not allowed", () => {
+    return fetch(`http://${loadBalancer.hostname}:${loadBalancer.port}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain",
+        origin: "http://localhost:8081",
+      },
+      body: "helloworld",
+    })
+      .then((response) => {
+        expect(response.status).toBe(403);
+        expect(response.headers.get("Content-Type")).toBe("text/plain");
+
+        return response.text();
+      })
+      .then((data) => {
+        expect(data).toBe("Error 403: Forbidden");
+      });
+  });
+
+  it("Throws Error 400 when a non-POST request is made to /", () => {
+    return fetch(`http://${loadBalancer.hostname}:${loadBalancer.port}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "text/plain",
+        origin: "http://localhost:8080",
+      },
+    })
+      .then((response) => {
+        expect(response.status).toBe(400);
+        expect(response.headers.get("Content-Type")).toBe("text/plain");
+
+        return response.text();
+      })
+      .then((data) => {
+        expect(data).toBe("Error 400: Bad Request");
       });
   });
 });

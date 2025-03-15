@@ -1,6 +1,4 @@
-const http = require("node:http");
-const fs = require("node:fs");
-const path = require("node:path");
+const http = require("http");
 const appAssert = require("./appAssert");
 
 function createLoadBalancer(serverArgs, serverPool, getNextServerIndex) {
@@ -10,7 +8,7 @@ function createLoadBalancer(serverArgs, serverPool, getNextServerIndex) {
     "serverArgs was not passed\nserverArgs: { serverId: Number, hostname: String, ip: String, port: Number }"
   );
 
-  const { serverId, hostname, ip, port } = serverArgs;
+  const { serverId, hostname, ip, port, allowOrigin } = serverArgs;
 
   appAssert(
     serverId !== undefined,
@@ -31,6 +29,11 @@ function createLoadBalancer(serverArgs, serverPool, getNextServerIndex) {
     port !== undefined,
     "Failed to create load balancer",
     "port is required in serverArgs"
+  );
+  appAssert(
+    allowOrigin !== undefined,
+    "Failed to create load balancer",
+    "allowOrigin is required in serverArgs"
   );
 
   appAssert(
@@ -53,40 +56,29 @@ function createLoadBalancer(serverArgs, serverPool, getNextServerIndex) {
   }
 
   const server = http.createServer((req, res) => {
-    if (req.method === "GET" && req.url === "/") {
-      // GET "/"
-
-      fs.readFile(
-        path.join(__dirname, "../../public/index.html"),
-        (error, data) => {
-          if (error) {
-            console.error(error);
-            res.statusCode = 404;
-            res.setHeader("Content-Type", "text/plain");
-            res.end("Error 404: Not Found");
-          } else {
-            res.statusCode = 200;
-            res.setHeader("Content-Type", "text/html");
-            res.end(data);
-          }
-        }
-      );
-    } else if (req.method === "POST" && req.url === "/server") {
-      // POST "/server"
+    if (req.headers.origin !== allowOrigin) {
+      res.statusCode = 403;
+      res.setHeader("Content-Type", "text/plain");
+      res.end("Error 403: Forbidden");
+    } else if (req.method === "POST" && req.url === "/") {
+      // POST "/"
 
       const serverFromPool = getServer();
-      const { hostname, port } = serverFromPool;
+      const { hostname: targetHostname, port: targetPort } = serverFromPool;
 
       const proxyReq = http.request(
         {
-          host: hostname,
-          port: port,
+          host: targetHostname,
+          port: targetPort,
           path: req.url,
           method: req.method,
-          headers: req.headers,
+          headers: { ...req.headers, origin: `http://${hostname}:${port}` },
         },
         (proxyRes) => {
-          res.writeHead(proxyRes.statusCode, proxyRes.headers);
+          res.writeHead(proxyRes.statusCode, {
+            ...proxyRes.headers,
+            "access-control-allow-origin": allowOrigin,
+          });
           proxyRes.pipe(res);
 
           proxyRes.on("end", () => {
@@ -104,11 +96,13 @@ function createLoadBalancer(serverArgs, serverPool, getNextServerIndex) {
 
         res.statusCode = 500;
         res.setHeader("Content-Type", "text/plain");
+        res.setHeader("access-control-allow-origin", allowOrigin);
         res.end("Error 500: Internal Server Error");
       });
     } else {
       res.statusCode = 400;
       res.setHeader("Content-Type", "text/plain");
+      res.setHeader("access-control-allow-origin", allowOrigin);
       res.end("Error 400: Bad Request");
     }
   });

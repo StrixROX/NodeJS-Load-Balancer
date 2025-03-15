@@ -11,7 +11,7 @@ function createEchoServer(serverArgs) {
     "serverArgs was not passed\nserverArgs: { serverId: Number, hostname: String, ip: String, port: Number }"
   );
 
-  const { serverId, hostname, ip, port } = serverArgs;
+  const { serverId, hostname, ip, port, allowOrigin } = serverArgs;
 
   appAssert(
     serverId !== undefined,
@@ -33,52 +33,62 @@ function createEchoServer(serverArgs) {
     "Failed to create server",
     "port is required in serverArgs"
   );
+  appAssert(
+    allowOrigin !== undefined,
+    "Failed to create server",
+    "allowOrigin is required in serverArgs"
+  );
 
   let connectionCount = 0;
 
   const server = http.createServer((req, res) => {
     connectionCount++;
 
-    if (req.method !== "POST") {
+    if (req.headers.origin !== allowOrigin) {
+      res.statusCode = 403;
+      res.setHeader("Content-Type", "text/plain");
+      res.end("Error 403: Forbidden");
+    } else if (req.method === "POST" && req.url === "/") {
+      res.statusCode = 200;
+      res.setHeader("Content-Type", "text/plain");
+      res.setHeader("access-control-allow-origin", allowOrigin);
+      res.setHeader("Transfer-Encoding", "chunked");
+
+      res.write(`[server #${serverId}] I Received: `);
+
+      // let promiseChain = Promise.resolve(null);
+      let promiseChain = new Promise((resolve) =>
+        setTimeout(resolve, RESPONSE_DELAY)
+      );
+
+      req.on("data", (chunk) => {
+        for (let i of chunk) {
+          promiseChain = promiseChain.then(() => {
+            return new Promise((resolve) => {
+              setTimeout(() => {
+                res.write(String.fromCharCode(i));
+                resolve();
+              }, RESPONSE_CHUNK_DELAY);
+            });
+          });
+        }
+      });
+
+      req.on("end", () => {
+        promiseChain.then(() => {
+          res.end("");
+        });
+      });
+    } else {
       res.statusCode = 400;
       res.setHeader("Content-Type", "text/plain");
+      res.setHeader("access-control-allow-origin", allowOrigin);
       res.end("Error 400: Bad Request");
-
-      return;
     }
-
-    res.statusCode = 200;
-    res.setHeader("Content-Type", "text/plain");
-    res.setHeader("Transfer-Encoding", "chunked");
-
-    res.write(`[server #${serverId}] I Received: `);
-
-    // let promiseChain = Promise.resolve(null);
-    let promiseChain = new Promise((resolve) =>
-      setTimeout(resolve, RESPONSE_DELAY)
-    );
-
-    req.on("data", (chunk) => {
-      for (let i of chunk) {
-        promiseChain = promiseChain.then(() => {
-          return new Promise((resolve) => {
-            setTimeout(() => {
-              res.write(String.fromCharCode(i));
-              resolve();
-            }, RESPONSE_CHUNK_DELAY);
-          });
-        });
-      }
-    });
-
-    req.on("end", () => {
-      promiseChain.then(() => {
-        res.end("");
-      });
-    });
 
     res.on("close", () => {
       connectionCount--;
+      req.socket.destroy();
     });
   });
 
@@ -91,7 +101,10 @@ function createEchoServer(serverArgs) {
     hostname,
     ip,
     port,
-    getConnections: (...args) => server.getConnections(...args),
+    getConnections: () =>
+      new Promise((resolve, reject) => {
+        server.getConnections((error, count) => resolve(count));
+      }),
     getConnectionsSync: () => connectionCount,
     start: () => {
       server.listen(port);
