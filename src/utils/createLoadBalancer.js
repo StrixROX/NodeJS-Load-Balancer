@@ -91,6 +91,8 @@ function createLoadBalancer(serverArgs, serverPool, getNextServerIndex) {
 
           proxyRes.on("end", () => {
             res.end();
+
+            proxyReq.socket.destroy();
           });
         }
       );

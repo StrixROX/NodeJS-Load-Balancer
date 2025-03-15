@@ -48,7 +48,7 @@ describe("createEchoServer", () => {
   });
 
   it("Correctly gives connection count", async () => {
-    expect(server.getConnectionCount()).toBe(0);
+    expect(server.getConnectionsSync()).toBe(0);
 
     await fetch(`http://${server.hostname}:${server.port}`, {
       method: "POST",
@@ -58,12 +58,12 @@ describe("createEchoServer", () => {
       body: "helloworldahdasasdhjdasjdajadsajdashjasdhdashjashkasdhashasdhjsadh",
     })
       .then(async (response) => {
-        expect(server.getConnectionCount()).toBe(1);
+        expect(server.getConnectionsSync()).toBe(1);
 
         return await readResponseToEnd(response);
       })
       .then(() => {
-        expect(server.getConnectionCount()).toBe(0);
+        expect(server.getConnectionsSync()).toBe(0);
       });
   });
 

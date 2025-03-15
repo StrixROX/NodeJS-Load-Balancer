@@ -91,7 +91,8 @@ function createEchoServer(serverArgs) {
     hostname,
     ip,
     port,
-    getConnectionCount: () => connectionCount,
+    getConnections: (...args) => server.getConnections(...args),
+    getConnectionsSync: () => connectionCount,
     start: () => {
       server.listen(port);
 
