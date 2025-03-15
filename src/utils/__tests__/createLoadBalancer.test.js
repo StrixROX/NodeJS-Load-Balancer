@@ -73,8 +73,8 @@ describe("createLoadBalancer", () => {
         hostname: "localhost",
         ip: "127.0.0.1",
         port: 5000,
-      }).toThrow("serverPool (ServerPool) was not passed")
-    );
+      })
+    ).toThrow("serverPool (ServerPool) was not passed");
 
     expect(() =>
       createLoadBalancer(
@@ -85,9 +85,9 @@ describe("createLoadBalancer", () => {
           port: 5000,
         },
         serverPool
-      ).toThrow(
-        "getNextServerIndex ((serverPool: ServerPool, currentServerIndex: Number) => Number) was not passed"
       )
+    ).toThrow(
+      "getNextServerIndex ((serverPool: ServerPool, currentServerIndex: Number) => Number) was not passed"
     );
   });
 

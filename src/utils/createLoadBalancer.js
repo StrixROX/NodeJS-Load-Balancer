@@ -4,29 +4,9 @@ const path = require("node:path");
 const appAssert = require("./appAssert");
 
 function createLoadBalancer(serverArgs, serverPool, getNextServerIndex) {
-  let currentServerIndex = -1;
-
-  function getServer() {
-    appAssert(
-      serverPool !== undefined,
-      "Unable to find servers",
-      "serverPool (ServerPool) was not passed"
-    );
-
-    appAssert(
-      getNextServerIndex !== undefined,
-      "Unable to find servers",
-      "getNextServerIndex ((serverPool: ServerPool, currentServerIndex: Number) => Number) was not passed"
-    );
-
-    currentServerIndex = getNextServerIndex(serverPool, currentServerIndex);
-
-    return serverPool.servers[currentServerIndex];
-  }
-
   appAssert(
     serverArgs !== undefined,
-    "Failed to create server",
+    "Failed to create load balancer",
     "serverArgs was not passed\nserverArgs: { serverId: Number, hostname: String, ip: String, port: Number }"
   );
 
@@ -34,24 +14,43 @@ function createLoadBalancer(serverArgs, serverPool, getNextServerIndex) {
 
   appAssert(
     serverId !== undefined,
-    "Failed to create server",
+    "Failed to create load balancer",
     "serverId is required in serverArgs"
   );
   appAssert(
     hostname !== undefined,
-    "Failed to create server",
+    "Failed to create load balancer",
     "hostname is required in serverArgs"
   );
   appAssert(
     ip !== undefined,
-    "Failed to create server",
+    "Failed to create load balancer",
     "ip is required in serverArgs"
   );
   appAssert(
     port !== undefined,
-    "Failed to create server",
+    "Failed to create load balancer",
     "port is required in serverArgs"
   );
+
+  appAssert(
+    serverPool !== undefined,
+    "Failed to create load balancer",
+    "serverPool (ServerPool) was not passed"
+  );
+
+  appAssert(
+    getNextServerIndex !== undefined,
+    "Failed to create load balancer",
+    "getNextServerIndex ((serverPool: ServerPool, currentServerIndex: Number) => Number) was not passed"
+  );
+
+  let currentServerIndex = -1;
+
+  function getServer() {
+    currentServerIndex = getNextServerIndex(serverPool, currentServerIndex);
+    return serverPool.servers[currentServerIndex];
+  }
 
   const server = http.createServer((req, res) => {
     if (req.method === "GET" && req.url === "/") {
