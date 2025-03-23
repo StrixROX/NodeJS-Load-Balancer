@@ -2,12 +2,18 @@
   "name": "nodejs-load-balancer",
   "version": "2.0.0",
   "scripts": {
-    "start": "node ./src/index.js",
-    "dev": "nodemon ./src/index.js",
-    "test": "jest"
+    "start": "tsc && node ./dist/index.js",
+    "dev": "ts-node ./src/index.ts",
+    "build": "tsc",
+    "test": "ts-jest"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.13.11",
     "jest": "^29.7.0",
-    "nodemon": "^3.1.9"
+    "nodemon": "^3.1.9",
+    "ts-jest": "^29.2.6",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
   }
 }

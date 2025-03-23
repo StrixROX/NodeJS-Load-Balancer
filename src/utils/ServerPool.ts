@@ -1,7 +1,7 @@
-const appAssert = require('./appAssert');
+import appAssert from './appAssert';
 
 class ServerPool {
-  servers = [];
+  public servers = [];
 
   get size() {
     return this.servers.length;
@@ -34,4 +34,4 @@ class ServerPool {
   }
 }
 
-module.exports = ServerPool;
+export default ServerPool;

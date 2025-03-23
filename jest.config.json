@@ -4,7 +4,11 @@
   "coverageDirectory": "./coverage",
   "coverageReporters": ["lcov", "text"],
   "testMatch": ["**/(*.test).js"],
-  "transformIgnorePatterns": ["!node_modules/"],
   "verbose": true,
-  "detectOpenHandles": true
+  "detectOpenHandles": true,
+  "testEnvironment": "node",
+  "transform": {
+    "^.+.tsx?$": ["ts-jest", {}]
+  },
+  "transformIgnorePatterns": ["!node_modules/"]
 }
