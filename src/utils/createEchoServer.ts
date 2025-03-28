@@ -1,22 +1,25 @@
-const http = require('http');
-const appAssert = require('./appAssert');
+import http from 'http';
 
-const RESPONSE_DELAY = 0;
-const RESPONSE_CHUNK_DELAY = 20;
+import type { ServerArgs, ServerInstance } from '../types';
 
-function createEchoServer(serverArgs) {
+import appAssert from './appAssert';
+
+const DELAY_BEFORE_SENDING_RESPONSE = 0;
+const DELAY_BETWEEN_SENDING_EACH_CHUNK = 20;
+
+function createEchoServer(serverArgs: ServerArgs): ServerInstance {
   appAssert(
     serverArgs !== undefined,
     'Failed to create server',
-    'serverArgs was not passed\nserverArgs: { serverId: Number, hostname: String, ip: String, port: Number }'
+    'serverArgs was not passed\nserverArgs: { id: Number, hostname: String, ip: String, port: Number }'
   );
 
-  const { serverId, hostname, ip, port, allowOrigin } = serverArgs;
+  const { id: serverId, hostname, ip, port, allowOrigin } = serverArgs;
 
   appAssert(
     serverId !== undefined,
     'Failed to create server',
-    'serverId is required in serverArgs'
+    'id is required in serverArgs'
   );
   appAssert(
     hostname !== undefined,
@@ -39,55 +42,52 @@ function createEchoServer(serverArgs) {
     'allowOrigin is required in serverArgs'
   );
 
-  let connectionCount = 0;
+  let connectionCountLocal = 0;
 
   const server = http.createServer((req, res) => {
-    connectionCount++;
+    connectionCountLocal++;
 
     if (req.headers.origin !== allowOrigin) {
       res.statusCode = 403;
-      res.setHeader('Content-Type', 'text/plain');
+      res.setHeader('content-type', 'text/plain');
       res.end('Error 403: Forbidden');
     } else if (req.method === 'POST' && req.url === '/') {
       res.statusCode = 200;
-      res.setHeader('Content-Type', 'text/plain');
+      res.setHeader('content-type', 'text/plain');
       res.setHeader('access-control-allow-origin', allowOrigin);
-      res.setHeader('Transfer-Encoding', 'chunked');
+      res.setHeader('transfer-encoding', 'chunked');
 
       res.write(`[server #${serverId}] I Received: `);
 
-      // let promiseChain = Promise.resolve(null);
       let promiseChain = new Promise((resolve) =>
-        setTimeout(resolve, RESPONSE_DELAY)
+        setTimeout(resolve, DELAY_BEFORE_SENDING_RESPONSE)
       );
 
       req.on('data', (chunk) => {
-        for (let i of chunk) {
+        for (const i of chunk) {
           promiseChain = promiseChain.then(() => {
-            return new Promise((resolve) => {
+            return new Promise<void>((resolve) => {
               setTimeout(() => {
                 res.write(String.fromCharCode(i));
                 resolve();
-              }, RESPONSE_CHUNK_DELAY);
+              }, DELAY_BETWEEN_SENDING_EACH_CHUNK);
             });
           });
         }
       });
 
       req.on('end', () => {
-        promiseChain.then(() => {
-          res.end('');
-        });
+        promiseChain.then(() => res.end(''));
       });
     } else {
       res.statusCode = 400;
-      res.setHeader('Content-Type', 'text/plain');
+      res.setHeader('content-type', 'text/plain');
       res.setHeader('access-control-allow-origin', allowOrigin);
       res.end('Error 400: Bad Request');
     }
 
     res.on('close', () => {
-      connectionCount--;
+      connectionCountLocal--;
       req.socket.destroy();
     });
   });
@@ -97,28 +97,45 @@ function createEchoServer(serverArgs) {
   );
 
   return {
-    id: serverId,
-    hostname,
-    ip,
-    port,
+    get id() {
+      return serverId;
+    },
+
+    get hostname() {
+      return hostname;
+    },
+
+    get ip() {
+      return ip;
+    },
+
+    get port() {
+      return port;
+    },
+
+    get allowOrigin() {
+      return allowOrigin;
+    },
+
     getConnections: () =>
-      new Promise((resolve, reject) => {
+      new Promise((resolve) => {
         server.getConnections((error, count) => resolve(count));
       }),
-    getConnectionsSync: () => connectionCount,
+
+    getConnectionsSync: () => connectionCountLocal,
+
     start: () => {
       server.listen(port);
-
       console.log(
         `🟢 [ ${hostname} #${serverId} ] Listening on port ${port}...`
       );
     },
+
     close: () => {
       server.close();
-
       console.log(`🔴 [ ${hostname} #${serverId} ] Server closed`);
     },
   };
 }
 
-module.exports = createEchoServer;
+export default createEchoServer;

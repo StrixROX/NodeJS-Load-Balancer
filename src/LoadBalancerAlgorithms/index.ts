@@ -1,5 +1,3 @@
-module.exports = {
-  RoundRobinLoadBalancer: require('./RoundRobin.js'),
-  WeightedRoundRobinLoadBalancer: require('./WeightedRoundRobin.js'),
-  LeastConnectionLoadBalancer: require('./LeastConnection.js'),
-};
+export { default as RoundRobinLoadBalancer } from './RoundRobin';
+export { default as WeightedRoundRobinLoadBalancer } from './WeightedRoundRobin';
+export { default as LeastConnectionLoadBalancer } from './LeastConnection';

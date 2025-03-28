@@ -1,24 +1,24 @@
-const ServerPool = require('../ServerPool.js');
-const createEchoServer = require('../createEchoServer.js');
+import createEchoServer from '../createEchoServer';
+import createServerPool from '../createServerPool';
 
-const serverPool = new ServerPool();
+const serverPool = createServerPool();
 
 const s1 = createEchoServer({
-  serverId: 1,
+  id: 1,
   hostname: 'localhost',
   ip: '127.0.0.1',
   port: 3000,
   allowOrigin: 'http://localhost:5000',
 });
 const s2 = createEchoServer({
-  serverId: 2,
+  id: 2,
   hostname: 'localhost',
   ip: '127.0.0.1',
   port: 3001,
   allowOrigin: 'http://localhost:5000',
 });
 const s3 = createEchoServer({
-  serverId: 3,
+  id: 3,
   hostname: 'localhost',
   ip: '127.0.0.1',
   port: 3002,
@@ -46,8 +46,8 @@ describe('ServerPool', () => {
   });
 
   it('throws error when adding server with id that already exists in the pool', () => {
-    expect(() => serverPool.addServer(s1)).toThrowError(
-      'server with same id already exists'
+    expect(() => serverPool.addServer(s1)).toThrow(
+      'server with id "1" already exists'
     );
   });
 
@@ -71,8 +71,8 @@ describe('ServerPool', () => {
   });
 
   it('throws error when removing server with id that does not exist in the pool', () => {
-    expect(() => serverPool.removeServerById(4)).toThrowError(
-      'server with id 4 does not exist'
+    expect(() => serverPool.removeServerById(4)).toThrow(
+      'server with id "4" does not exist'
     );
   });
 });

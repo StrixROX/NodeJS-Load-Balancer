@@ -1,11 +1,11 @@
-const createLoadBalancer = require('../createLoadBalancer.js');
-const createEchoServer = require('../createEchoServer.js');
-const ServerPool = require('../ServerPool.js');
+import createEchoServer from '../createEchoServer';
+import createLoadBalancer from '../createLoadBalancer';
+import createServerPool from '../createServerPool';
 
-const serverPool = new ServerPool();
+const serverPool = createServerPool();
 serverPool.addServer(
   createEchoServer({
-    serverId: 1,
+    id: 1,
     hostname: 'localhost',
     ip: '127.0.0.1',
     port: 3001,
@@ -15,7 +15,7 @@ serverPool.addServer(
 
 const loadBalancer = createLoadBalancer(
   {
-    serverId: 0,
+    id: 0,
     hostname: 'localhost',
     ip: '127.0.0.1',
     port: 5000,
@@ -37,31 +37,37 @@ afterAll(() => {
 
 describe('createLoadBalancer', () => {
   it('Throws error when invalid args are passed', () => {
+    // @ts-expect-error: serverArgs is intentionally being omitted to test error handling
     expect(() => createLoadBalancer()).toThrow('serverArgs was not passed');
 
+    // @ts-expect-error: serverArgs is intentionally left incomplete to test error handling
     expect(() => createLoadBalancer({})).toThrow(
-      'serverId is required in serverArgs'
+      'id is required in serverArgs'
     );
 
-    expect(() => createLoadBalancer({ serverId: 0 })).toThrow(
+    // @ts-expect-error: serverArgs is intentionally left incomplete to test error handling
+    expect(() => createLoadBalancer({ id: 0 })).toThrow(
       'hostname is required in serverArgs'
     );
 
-    expect(() =>
-      createLoadBalancer({ serverId: 1, hostname: 'localhost' })
-    ).toThrow('ip is required in serverArgs');
+    // @ts-expect-error: serverArgs is intentionally left incomplete to test error handling
+    expect(() => createLoadBalancer({ id: 1, hostname: 'localhost' })).toThrow(
+      'ip is required in serverArgs'
+    );
 
     expect(() =>
+      // @ts-expect-error: serverArgs is intentionally left incomplete to test error handling
       createLoadBalancer({
-        serverId: 0,
+        id: 0,
         hostname: 'localhost',
         ip: '127.0.0.1',
       })
     ).toThrow('port is required in serverArgs');
 
     expect(() =>
+      // @ts-expect-error: serverArgs is intentionally left incomplete to test error handling
       createLoadBalancer({
-        serverId: 0,
+        id: 0,
         hostname: 'localhost',
         ip: '127.0.0.1',
         port: 5000,
@@ -69,8 +75,9 @@ describe('createLoadBalancer', () => {
     ).toThrow('allowOrigin is required in serverArgs');
 
     expect(() =>
+      // @ts-expect-error: serverPoll is intentionally being omitted to test error handling
       createLoadBalancer({
-        serverId: 0,
+        id: 0,
         hostname: 'localhost',
         ip: '127.0.0.1',
         port: 5000,
@@ -79,9 +86,10 @@ describe('createLoadBalancer', () => {
     ).toThrow('serverPool (ServerPool) was not passed');
 
     expect(() =>
+      // @ts-expect-error: getNextServerIndex is intentionally being omitted to test error handling
       createLoadBalancer(
         {
-          serverId: 0,
+          id: 0,
           hostname: 'localhost',
           ip: '127.0.0.1',
           port: 5000,
@@ -94,26 +102,36 @@ describe('createLoadBalancer', () => {
     );
   });
 
+  it("Returns the server details", async () => {
+    expect(loadBalancer.id).toBe(0);
+    expect(loadBalancer.hostname).toBe('localhost');
+    expect(loadBalancer.ip).toBe('127.0.0.1');
+    expect(loadBalancer.port).toBe(5000);
+    expect(loadBalancer.allowOrigin).toBe("http://localhost:8080");
+    expect(loadBalancer.getConnectionsSync()).toBe(0);
+    expect(await loadBalancer.getConnections()).toBe(0);
+  })
+
   it('Returns response from server #1 when POST request is made to /', () => {
     return fetch(`http://${loadBalancer.hostname}:${loadBalancer.port}/`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'text/plain',
+        'content-type': 'text/plain',
         origin: 'http://localhost:8080',
       },
       body: 'helloworld',
     })
       .then(async (response) => {
         expect(response.status).toBe(200);
-        expect(response.headers.get('Content-Type')).toBe('text/plain');
+        expect(response.headers.get('content-type')).toBe('text/plain');
 
         const textDecoder = new TextDecoder('utf-8');
-        const streamReader = response.body.getReader();
+        const streamReader = response.body?.getReader();
 
         let keepReading = true;
         let data = '';
         while (keepReading) {
-          await streamReader.read().then(({ done, value }) => {
+          await streamReader?.read().then(({ done, value }) => {
             const res = textDecoder.decode(value);
             data += res;
             keepReading = !done;
@@ -135,14 +153,14 @@ describe('createLoadBalancer', () => {
     return fetch(`http://${loadBalancer.hostname}:${loadBalancer.port}`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'text/plain',
+        'content-type': 'text/plain',
         origin: 'http://localhost:8080',
       },
       body: 'helloworld',
     })
       .then((response) => {
         expect(response.status).toBe(500);
-        expect(response.headers.get('Content-Type')).toBe('text/plain');
+        expect(response.headers.get('content-type')).toBe('text/plain');
 
         return response.text();
       })
@@ -155,14 +173,14 @@ describe('createLoadBalancer', () => {
     return fetch(`http://${loadBalancer.hostname}:${loadBalancer.port}`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'text/plain',
+        'content-type': 'text/plain',
         origin: 'http://localhost:8081',
       },
       body: 'helloworld',
     })
       .then((response) => {
         expect(response.status).toBe(403);
-        expect(response.headers.get('Content-Type')).toBe('text/plain');
+        expect(response.headers.get('content-type')).toBe('text/plain');
 
         return response.text();
       })
@@ -175,13 +193,13 @@ describe('createLoadBalancer', () => {
     return fetch(`http://${loadBalancer.hostname}:${loadBalancer.port}`, {
       method: 'GET',
       headers: {
-        'Content-Type': 'text/plain',
+        'content-type': 'text/plain',
         origin: 'http://localhost:8080',
       },
     })
       .then((response) => {
         expect(response.status).toBe(400);
-        expect(response.headers.get('Content-Type')).toBe('text/plain');
+        expect(response.headers.get('content-type')).toBe('text/plain');
 
         return response.text();
       })
