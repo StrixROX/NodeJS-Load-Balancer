@@ -1,5 +1,6 @@
-const fs = require('fs');
-const createClientPageServer = require('../createClientPageServer.js');
+import fs from 'fs';
+
+import createClientPageServer from '../createClientPageServer';
 
 jest.mock('fs', () => {
   return {
@@ -11,7 +12,7 @@ jest.mock('fs', () => {
 
 const clientPageServer = createClientPageServer(
   {
-    serverId: 0,
+    id: 0,
     hostname: 'localhost',
     ip: '127.0.0.1',
     port: 8080,
@@ -24,31 +25,37 @@ afterAll(() => clientPageServer.close());
 
 describe('createClientPageServer', () => {
   it('Throws error when invalid args are passed', () => {
+    // @ts-expect-error: serverArgs is intentionally being omitted to test error handling
     expect(() => createClientPageServer()).toThrow('serverArgs was not passed');
 
+    // @ts-expect-error: serverArgs is intentionally left incomplete to test error handling
     expect(() => createClientPageServer({})).toThrow(
-      'serverId is required in serverArgs'
+      'id is required in serverArgs'
     );
 
-    expect(() => createClientPageServer({ serverId: 0 })).toThrow(
+    // @ts-expect-error: serverArgs is intentionally left incomplete to test error handling
+    expect(() => createClientPageServer({ id: 0 })).toThrow(
       'hostname is required in serverArgs'
     );
 
     expect(() =>
-      createClientPageServer({ serverId: 1, hostname: 'localhost' })
+      // @ts-expect-error: serverArgs is intentionally left incomplete to test error handling
+      createClientPageServer({ id: 1, hostname: 'localhost' })
     ).toThrow('ip is required in serverArgs');
 
     expect(() =>
+      // @ts-expect-error: serverArgs is intentionally left incomplete to test error handling
       createClientPageServer({
-        serverId: 0,
+        id: 0,
         hostname: 'localhost',
         ip: '127.0.0.1',
       })
     ).toThrow('port is required in serverArgs');
 
     expect(() =>
+      // @ts-expect-error: serverArgs is intentionally left incomplete to test error handling
       createClientPageServer({
-        serverId: 0,
+        id: 0,
         hostname: 'localhost',
         ip: '127.0.0.1',
         port: 5000,
@@ -56,18 +63,29 @@ describe('createClientPageServer', () => {
     ).toThrow('htmlFilePath (string) was not passed');
   });
 
+  it("Returns the server details", async () => {
+    expect(clientPageServer.id).toBe(0);
+    expect(clientPageServer.hostname).toBe('localhost');
+    expect(clientPageServer.ip).toBe('127.0.0.1');
+    expect(clientPageServer.port).toBe(8080);
+    expect(clientPageServer.allowOrigin).toBe("*");
+    expect(clientPageServer.getConnectionsSync()).toBe(0);
+    expect(await clientPageServer.getConnections()).toBe(0);
+  })
+
   it('Returns the test webpage when GET request is made to /', () => {
     return fetch(
       `http://${clientPageServer.hostname}:${clientPageServer.port}`
     ).then((response) => {
       expect(response.status).toBe(200);
-      expect(response.headers.get('Content-Type')).toBe('text/html');
+      expect(response.headers.get('content-type')).toBe('text/html');
 
       return response.text();
     });
   });
 
-  it('Throws Error 404 when fs fails to read file while trying GET /', () => {
+  it('Throws Error 500 when fs fails to read file while trying GET /', () => {
+    // @ts-expect-error: fs.readFile is mocked above
     fs.readFile.mockImplementationOnce((filePath, callback) => {
       callback(new Error(`Failed to read file: ${filePath}`), null);
     });
@@ -77,18 +95,18 @@ describe('createClientPageServer', () => {
       {
         method: 'GET',
         headers: {
-          'Content-Type': 'text/plain',
+          'content-type': 'text/plain',
         },
       }
     )
       .then((response) => {
-        expect(response.status).toBe(404);
-        expect(response.headers.get('Content-Type')).toBe('text/plain');
+        expect(response.status).toBe(500);
+        expect(response.headers.get('content-type')).toBe('text/plain');
 
         return response.text();
       })
       .then((data) => {
-        expect(data).toBe('Error 404: Not Found');
+        expect(data).toBe('Error 500: Internal Server Error');
       });
   });
 
@@ -98,13 +116,13 @@ describe('createClientPageServer', () => {
       {
         method: 'POST',
         headers: {
-          'Content-Type': 'text/plain',
+          'content-type': 'text/plain',
         },
       }
     )
       .then((response) => {
         expect(response.status).toBe(400);
-        expect(response.headers.get('Content-Type')).toBe('text/plain');
+        expect(response.headers.get('content-type')).toBe('text/plain');
 
         return response.text();
       })

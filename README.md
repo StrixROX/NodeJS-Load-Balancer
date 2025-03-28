@@ -1,10 +1,10 @@
 # NodeJS Load Balancer
 
-A load balancer made using Node.js and its `http` module. The load balancer operates in the Application Layer according to OSI model.
+A load balancer made using `NodeJS`, `TypeScript` and `http` module. The load balancer operates in the Application Layer according to OSI model.
 
 ## Getting Started
 
-### Clone The Repository
+### Clone the Repository
 
 You can clone this repository on your local machine using the following bash command.
 
@@ -12,17 +12,25 @@ You can clone this repository on your local machine using the following bash com
 git clone https://github.com/StrixROX/NodeJS-Load-Balancer.git
 ```
 
-### No Dependencies
+### Build the Project
 
-This is built using only the standard Node modules. Therefore, there is no need to install any dependencies to run the app. However, for development, `nodemon` and `jest` modules will be needed so make sure you install those using the following command:
+Before running the project, you will have to build the project. For this you will first have to install the development dependencies using:
 
 ```bash
 npm install
 ```
 
+Now, build the project using:
+
+```bash
+npm run build
+```
+
+The build output will get saved in `/dist` folder.
+
 ### Start Initial Environment
 
-`src/index.js` file provides some starter code to initialise the environment for using the load balancer. You can run it using the `start` script in `package.json` as such:
+`src/index.ts` file provides some starter code to initialise the environment for using the load balancer. You can run it using the `start` script in `package.json` as such:
 
 ```bash
 npm start # servers run once
@@ -67,4 +75,3 @@ npm test src/*
   - Create a variant which operates in the Transport Layer (OSI Layer 4)
   - Try using HTTP/2 via `http2` module
 - Implement an SSL layer using `https` module.
-- Port to TypeScript
