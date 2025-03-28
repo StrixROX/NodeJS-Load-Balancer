@@ -5,7 +5,8 @@
     "start": "tsc && node ./dist/index.js",
     "dev": "ts-node ./src/index.ts",
     "build": "tsc",
-    "test": "jest"
+    "test": "jest",
+    "lint": "eslint src"
   },
   "devDependencies": {
     "@eslint/js": "^9.23.0",
