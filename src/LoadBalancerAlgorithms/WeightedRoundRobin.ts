@@ -1,4 +1,6 @@
-function generator(serverWeights) {
+import type { LoadBalancerAlgorithm } from "../types";
+
+function generator(serverWeights: number[]): LoadBalancerAlgorithm {
   let serverCallCount = 0;
 
   return function getNextServerIndex(serverPool, currentServerIndex) {
@@ -14,4 +16,4 @@ function generator(serverWeights) {
   };
 }
 
-module.exports = generator;
+export default generator;

@@ -1,9 +1,10 @@
-const path = require('path');
-const ServerPool = require('./utils/ServerPool.js');
-const createEchoServer = require('./utils/createEchoServer.js');
-const createLoadBalancer = require('./utils/createLoadBalancer.js');
-const LoadBalancingAlgorithms = require('./LoadBalancerAlgorithms');
-const createClientPageServer = require('./utils/createClientPageServer.js');
+import path from 'path';
+
+import * as LoadBalancingAlgorithms from './LoadBalancerAlgorithms';
+import createClientPageServer from './utils/createClientPageServer';
+import createEchoServer from './utils/createEchoServer';
+import createLoadBalancer from './utils/createLoadBalancer';
+import createServerPool from './utils/createServerPool';
 
 // ----------------------------------------------------------------------------
 // Constants
@@ -11,7 +12,7 @@ const createClientPageServer = require('./utils/createClientPageServer.js');
 const SERVER_POOL_SIZE = 3;
 
 const CLIENT_PAGE_SERVER_DETAILS = {
-  serverId: 'ClientPageServer',
+  id: 'ClientPageServer',
   hostname: 'localhost',
   ip: '127.0.0.1',
   port: 8080,
@@ -19,7 +20,7 @@ const CLIENT_PAGE_SERVER_DETAILS = {
 };
 
 const LOAD_BALANCER_SERVER_DETAILS = {
-  serverId: 'LoadBalancer',
+  id: 'LoadBalancer',
   hostname: 'localhost',
   ip: '127.0.0.1',
   port: 5000,
@@ -34,13 +35,13 @@ const DEFAULT_BACKEND_SERVER_DETAILS = {
 // ----------------------------------------------------------------------------
 
 // create server pool
-const pool = new ServerPool();
+const pool = createServerPool();
 
 // add servers
 for (let i = 0; i < SERVER_POOL_SIZE; i++) {
   const server = createEchoServer({
     ...DEFAULT_BACKEND_SERVER_DETAILS,
-    serverId: i + 1,
+    id: i + 1,
     port: 3000 + i + 1,
   });
   pool.addServer(server);

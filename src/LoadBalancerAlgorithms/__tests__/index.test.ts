@@ -1,4 +1,5 @@
-const LoadBalancerAlgorithms = require('../index.js');
+import type { ServerPool } from '../../types';
+import * as LoadBalancerAlgorithms from '../index';
 
 describe('Load Balancing Algorithms - RoundRobin', () => {
   it('cycles through all the servers in the pool', () => {
@@ -11,7 +12,7 @@ describe('Load Balancing Algorithms - RoundRobin', () => {
         { id: 3, getConnectionsSync: () => 3 },
       ],
       size: 3,
-    };
+    } as ServerPool;
 
     expect(roundRobin(mockServerPool, 0)).toBe(1);
     expect(roundRobin(mockServerPool, 1)).toBe(2);
@@ -28,7 +29,7 @@ describe('Load Balancing Algorithms - WeightedRoundRobin', () => {
         { id: 3, getConnectionsSync: () => 0 },
       ],
       size: 3,
-    };
+    } as ServerPool;
 
     const weightedRoundRobin =
       LoadBalancerAlgorithms.WeightedRoundRobinLoadBalancer(
@@ -56,7 +57,7 @@ describe('Load Balancing Algorithms - WeightedRoundRobin', () => {
         { id: 3, getConnectionsSync: () => 0 },
       ],
       size: 3,
-    };
+    } as ServerPool;
 
     const weightedRoundRobin =
       LoadBalancerAlgorithms.WeightedRoundRobinLoadBalancer([1, 2, 3]);
@@ -86,8 +87,8 @@ describe('Load Balancing Algorithms - LeastConnection', () => {
         { id: 3, getConnectionsSync: () => 0 },
       ],
       size: 3,
-    };
-    expect(leastConnection(mockServerPool)).toBe(
+    } as ServerPool;
+    expect(leastConnection(mockServerPool, -1)).toBe(
       roundRobin(mockServerPool, -1)
     );
 
@@ -98,8 +99,10 @@ describe('Load Balancing Algorithms - LeastConnection', () => {
         { id: 3, getConnectionsSync: () => 0 },
       ],
       size: 3,
-    };
-    expect(leastConnection(mockServerPool)).toBe(roundRobin(mockServerPool, 0));
+    } as ServerPool;
+    expect(leastConnection(mockServerPool, 0)).toBe(
+      roundRobin(mockServerPool, 0)
+    );
 
     mockServerPool = {
       servers: [
@@ -108,8 +111,10 @@ describe('Load Balancing Algorithms - LeastConnection', () => {
         { id: 3, getConnectionsSync: () => 0 },
       ],
       size: 3,
-    };
-    expect(leastConnection(mockServerPool)).toBe(roundRobin(mockServerPool, 1));
+    } as ServerPool;
+    expect(leastConnection(mockServerPool, 1)).toBe(
+      roundRobin(mockServerPool, 1)
+    );
 
     mockServerPool = {
       servers: [
@@ -118,8 +123,10 @@ describe('Load Balancing Algorithms - LeastConnection', () => {
         { id: 3, getConnectionsSync: () => 1 },
       ],
       size: 3,
-    };
-    expect(leastConnection(mockServerPool)).toBe(roundRobin(mockServerPool, 2));
+    } as ServerPool;
+    expect(leastConnection(mockServerPool, 2)).toBe(
+      roundRobin(mockServerPool, 2)
+    );
   });
 
   it('sends requests to the server with lowest number of connections', () => {
@@ -135,8 +142,8 @@ describe('Load Balancing Algorithms - LeastConnection', () => {
         { id: 3, getConnectionsSync: () => 2 },
       ],
       size: 3,
-    };
-    expect(leastConnection(mockServerPool)).toBe(0);
+    } as ServerPool;
+    expect(leastConnection(mockServerPool, 0)).toBe(0);
 
     mockServerPool = {
       servers: [
@@ -145,8 +152,8 @@ describe('Load Balancing Algorithms - LeastConnection', () => {
         { id: 3, getConnectionsSync: () => 1 },
       ],
       size: 3,
-    };
-    expect(leastConnection(mockServerPool)).toBe(0);
+    } as ServerPool;
+    expect(leastConnection(mockServerPool, 0)).toBe(0);
 
     mockServerPool = {
       servers: [
@@ -155,8 +162,8 @@ describe('Load Balancing Algorithms - LeastConnection', () => {
         { id: 3, getConnectionsSync: () => 2 },
       ],
       size: 3,
-    };
-    expect(leastConnection(mockServerPool)).toBe(0);
+    } as ServerPool;
+    expect(leastConnection(mockServerPool, 0)).toBe(0);
 
     mockServerPool = {
       servers: [
@@ -165,8 +172,8 @@ describe('Load Balancing Algorithms - LeastConnection', () => {
         { id: 3, getConnectionsSync: () => 1 },
       ],
       size: 3,
-    };
-    expect(leastConnection(mockServerPool)).toBe(1);
+    } as ServerPool;
+    expect(leastConnection(mockServerPool, 1)).toBe(1);
 
     mockServerPool = {
       servers: [
@@ -175,7 +182,7 @@ describe('Load Balancing Algorithms - LeastConnection', () => {
         { id: 3, getConnectionsSync: () => 1 },
       ],
       size: 3,
-    };
-    expect(leastConnection(mockServerPool)).toBe(2);
+    } as ServerPool;
+    expect(leastConnection(mockServerPool, 2)).toBe(2);
   });
 });

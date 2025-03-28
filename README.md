@@ -1,6 +1,6 @@
 # NodeJS Load Balancer
 
-A load balancer made using Node.js and its `http` module. The load balancer operates in the Application Layer according to OSI model.
+A load balancer made using NodeJS, TypeScript and `http` module. The load balancer operates in the Application Layer according to OSI model.
 
 ## Getting Started
 
@@ -22,7 +22,7 @@ npm install
 
 ### Start Initial Environment
 
-`src/index.js` file provides some starter code to initialise the environment for using the load balancer. You can run it using the `start` script in `package.json` as such:
+`src/index.ts` file provides some starter code to initialise the environment for using the load balancer. You can run it using the `start` script in `package.json` as such:
 
 ```bash
 npm start # servers run once

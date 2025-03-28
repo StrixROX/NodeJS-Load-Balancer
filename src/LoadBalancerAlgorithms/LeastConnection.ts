@@ -1,4 +1,6 @@
-function generator() {
+import type { LoadBalancerAlgorithm } from '../types';
+
+function generator(): LoadBalancerAlgorithm {
   return function getNextServerIndex(serverPool) {
     let leastConnectionCountServerIndex = 0;
     let leastConnectionCount = serverPool.servers[0].getConnectionsSync();
@@ -7,6 +9,7 @@ function generator() {
       if (leastConnectionCount === 0) {
         break;
       }
+
       if (serverPool.servers[i].getConnectionsSync() < leastConnectionCount) {
         leastConnectionCountServerIndex = i;
         leastConnectionCount = serverPool.servers[i].getConnectionsSync();
@@ -17,4 +20,4 @@ function generator() {
   };
 }
 
-module.exports = generator;
+export default generator;
