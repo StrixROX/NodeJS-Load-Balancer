@@ -78,6 +78,7 @@ function createClientPageServer(
   console.log(
     `\x1b[32m✔\x1b[0m [ OK ] Client Page Server created - ${hostname} #${serverId}`
   );
+  console.log(`Client page available at http://${hostname}:${port}`);
 
   return {
     get id() {

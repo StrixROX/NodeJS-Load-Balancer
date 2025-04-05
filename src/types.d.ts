@@ -1,12 +1,9 @@
-export type ServerId = string | number;
+import { z } from 'zod';
 
-export type ServerArgs = {
-  id: ServerId;
-  hostname: string;
-  ip: string;
-  port: number;
-  allowOrigin: string;
-};
+import { ServerArgsSchema, ServerIdSchema } from './schema';
+
+export type ServerId = z.infer<typeof ServerIdSchema>;
+export type ServerArgs = z.infer<typeof ServerArgsSchema>;
 
 export type ServerInstance = Readonly<ServerArgs> & {
   start: () => void;
@@ -23,4 +20,7 @@ export type ServerPool = {
   removeServerById: (serverId: ServerId) => void;
 };
 
-export type LoadBalancerAlgorithm = (serverPool: ServerPool, currentServerIndex: number) => number;
+export type LoadBalancerAlgorithm = (
+  serverPool: ServerPool,
+  currentServerIndex: number
+) => number;
