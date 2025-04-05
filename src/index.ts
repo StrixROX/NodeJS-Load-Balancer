@@ -4,6 +4,7 @@ import * as LoadBalancingAlgorithms from './LoadBalancerAlgorithms';
 import createClientPageServer from './utils/createClientPageServer';
 import createEchoServer from './utils/createEchoServer';
 import createLoadBalancer from './utils/createLoadBalancer';
+import createNetMonServer from './utils/createNetMonServer';
 import createServerPool from './utils/createServerPool';
 
 // ----------------------------------------------------------------------------
@@ -66,7 +67,16 @@ const clientPageServer = createClientPageServer(
   path.join(__dirname, '../public/index.html')
 );
 
+const networkMonitorServer = createNetMonServer({
+  id: 'NetworkMonitor',
+  hostname: 'localhost',
+  ip: '127.0.0.1',
+  port: 8081,
+  allowOrigin: `http://${CLIENT_PAGE_SERVER_DETAILS.hostname}:${CLIENT_PAGE_SERVER_DETAILS.port}`, // client page server address
+});
+
 // start servers
 pool.servers.forEach((server) => server.start());
 loadBalancer.start();
 clientPageServer.start();
+networkMonitorServer.start();

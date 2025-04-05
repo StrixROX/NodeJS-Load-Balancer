@@ -14,12 +14,17 @@ arnmodwpbcfnpkkdghtikbneqyxuzhcdlfcpijdeldiytmnwclqawndxievhorlyxdrajuqesutwrlgd
     >
     <button id="sendButton">Send</button>
     <button id="clearButton">Clear Log</button>
+    <button id="testButton">Test</button>
+    <button id="test2Button">hello</button>
+
     <pre id="responseLogArea"></pre>
 
     <script>
       const msgInput = document.getElementById('msgInput');
       const sendButton = document.getElementById('sendButton');
       const clearButton = document.getElementById('clearButton');
+      const testButton = document.getElementById('testButton');
+      const test2Button = document.getElementById('test2Button');
       const responseLogArea = document.getElementById('responseLogArea');
 
       let controller = null;
@@ -71,6 +76,25 @@ arnmodwpbcfnpkkdghtikbneqyxuzhcdlfcpijdeldiytmnwclqawndxievhorlyxdrajuqesutwrlgd
 
       clearButton.addEventListener('click', () => {
         responseLogArea.textContent = '';
+      });
+
+      let ws = null;
+
+      testButton.addEventListener('click', () => {
+        if (ws && ws.readyState === 1) {
+          return;
+        }
+        ws = new WebSocket(`ws://localhost:8081/`);
+        ws.onopen = (socket, event) => {
+          console.log('WebSocket connection opened.');
+        };
+        ws.onmessage = (event) => console.log(event.data);
+      });
+
+      test2Button.addEventListener('click', () => {
+        if (ws) {
+          ws.send("hello")
+        }
       });
     </script>
   </body>
