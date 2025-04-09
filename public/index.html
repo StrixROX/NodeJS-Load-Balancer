@@ -7,6 +7,17 @@
   </head>
   <body>
     <h1>My App</h1>
+
+    <div style="border: 1px solid black; display: inline-block">
+      <h3 style="margin-top: 0px">Network Monitor</h3>
+      <table id="networkMonitorTable" style="border: none">
+        <thead>
+          <th>Server ID</th>
+          <th>Connection count</th>
+        </thead>
+      </table>
+    </div>
+
     <h3>Talk to my server:</h3>
     <!-- <textarea id="msgInput">Hello, how are you?</textarea> -->
     <textarea id="msgInput">
@@ -14,8 +25,7 @@ arnmodwpbcfnpkkdghtikbneqyxuzhcdlfcpijdeldiytmnwclqawndxievhorlyxdrajuqesutwrlgd
     >
     <button id="sendButton">Send</button>
     <button id="clearButton">Clear Log</button>
-    <button id="testButton">Test</button>
-    <button id="test2Button">hello</button>
+    <button id="testButton">Connect Network Monitor</button>
 
     <pre id="responseLogArea"></pre>
 
@@ -24,8 +34,8 @@ arnmodwpbcfnpkkdghtikbneqyxuzhcdlfcpijdeldiytmnwclqawndxievhorlyxdrajuqesutwrlgd
       const sendButton = document.getElementById('sendButton');
       const clearButton = document.getElementById('clearButton');
       const testButton = document.getElementById('testButton');
-      const test2Button = document.getElementById('test2Button');
       const responseLogArea = document.getElementById('responseLogArea');
+      const netMonTable = document.getElementById('networkMonitorTable');
 
       let controller = null;
 
@@ -79,6 +89,50 @@ arnmodwpbcfnpkkdghtikbneqyxuzhcdlfcpijdeldiytmnwclqawndxievhorlyxdrajuqesutwrlgd
       });
 
       let ws = null;
+      const netMonMessageParser = (event) => {
+        if (event.data.includes('monitoring')) {
+          const [_, serverId, connectionCount] = event.data.match(
+            /^monitoring_server\#(\d+):(\d+)$/
+          );
+
+          if (!serverId || !connectionCount) {
+            return;
+          }
+
+          const row = document.createElement('tr');
+          const serverIdCell = document.createElement('td');
+          const connectionCountCell = document.createElement('td');
+
+          serverIdCell.textContent = serverId;
+          connectionCountCell.textContent = connectionCount;
+
+          row.append(serverIdCell);
+          row.append(connectionCountCell);
+
+          netMonTable.append(row);
+        } else if (event.data.includes('connectionCount_server')) {
+          const [_, serverId, connectionCount] = event.data.match(
+            /^connectionCount_server\#(\d+):(\d+)$/
+          );
+
+          if (!serverId || !connectionCount) {
+            return;
+          }
+
+          const allRows = document.querySelectorAll('tr');
+          const rowIndexWithServerId = Array.from(allRows).findIndex(
+            (el) => el.querySelectorAll('td')[0]?.textContent === serverId
+          );
+          const rowWithServerId = allRows[rowIndexWithServerId];
+
+          if (!rowWithServerId) {
+            return;
+          }
+
+          rowWithServerId.querySelectorAll('td')[1].textContent =
+            connectionCount;
+        }
+      };
 
       testButton.addEventListener('click', () => {
         if (ws && ws.readyState === 1) {
@@ -88,7 +142,10 @@ arnmodwpbcfnpkkdghtikbneqyxuzhcdlfcpijdeldiytmnwclqawndxievhorlyxdrajuqesutwrlgd
         ws.onopen = (socket, event) => {
           console.log('WebSocket connection opened.');
         };
-        ws.onmessage = (event) => console.log(event.data);
+        ws.onmessage = netMonMessageParser;
+        ws.onclose = () => {
+          console.log('WebSocket connection closed.');
+        };
       });
     </script>
   </body>

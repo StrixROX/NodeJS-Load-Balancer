@@ -66,13 +66,24 @@ function createNetMonServer(
 
     // broadcast connection counts on every CONNECTION_COUNT_CHANGED event
     serverPool.servers.forEach((server) => {
-      server.emitters.connectionCount?.on(EVENT_TYPES.CONNECTION_COUNT_CHANGED, () => {
-        socket.write(
-          createUnmaskedWebSocketFrame(
-            parseEventToString('CONNECTION_COUNT_CHANGED', server)
-          )
-        );
-      });
+      socket.write(
+        createUnmaskedWebSocketFrame(
+          parseEventToString('NETWORK_MONITOR_CONNECTED', server)
+        )
+      );
+
+      server.emitters.connectionCount?.on(
+        EVENT_TYPES.CONNECTION_COUNT_CHANGED,
+        () => {
+          if (socket.closed) return;
+
+          socket.write(
+            createUnmaskedWebSocketFrame(
+              parseEventToString('CONNECTION_COUNT_CHANGED', server)
+            )
+          );
+        }
+      );
     });
 
     socket.on('close', () => {
