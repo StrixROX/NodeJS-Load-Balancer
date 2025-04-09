@@ -10,6 +10,9 @@ export type ServerInstance = Readonly<ServerArgs> & {
   close: () => void;
   getConnections: () => Promise<number>;
   getConnectionsSync: () => number;
+  readonly emitters: {
+    connectionCount?: NodeJS.EventEmitter;
+  };
 };
 
 export type ServerPool = {

@@ -1,9 +1,11 @@
+import EventEmitter from 'events';
 import fs from 'fs';
 import http from 'http';
 
 import type { ServerArgs, ServerInstance } from '../types';
 
 import appAssert from './appAssert';
+import { EVENT_TYPES } from './events';
 
 function createClientPageServer(
   serverArgs: Omit<ServerArgs, 'allowOrigin'>,
@@ -45,10 +47,13 @@ function createClientPageServer(
   );
 
   const allowOrigin = '*';
+
   let connectionCountLocal = 0;
+  const connectionCountEmitter = new EventEmitter();
 
   const server = http.createServer((req, res) => {
     connectionCountLocal++;
+    connectionCountEmitter.emit(EVENT_TYPES.CONNECTION_COUNT_CHANGED);
 
     if (req.method === 'GET' && req.url === '/') {
       fs.readFile(htmlFilePath, (error, data) => {
@@ -71,6 +76,7 @@ function createClientPageServer(
 
     res.on('close', () => {
       connectionCountLocal--;
+      connectionCountEmitter.emit(EVENT_TYPES.CONNECTION_COUNT_CHANGED);
       req.socket.destroy();
     });
   });
@@ -99,6 +105,12 @@ function createClientPageServer(
 
     get allowOrigin() {
       return allowOrigin;
+    },
+
+    get emitters() {
+      return {
+        connectionCount: connectionCountEmitter,
+      };
     },
 
     getConnections: () =>

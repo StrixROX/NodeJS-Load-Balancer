@@ -1,22 +1,25 @@
 // NetMon - Network Monitor
 
 import crypto from 'crypto';
+import EventEmitter from 'events';
 import http from 'http';
 
 import { ServerArgsSchema } from '../schema';
-import type { ServerArgs, ServerInstance } from '../types';
+import type { ServerArgs, ServerInstance, ServerPool } from '../types';
 
 import errorBoundary from './errorBoundary';
-import {
-  createUnmaskedWebSocketFrame,
-  parseMaskedWebSocketFrame,
-} from './websocketFrames';
+import { EVENT_TYPES, parseEventToString } from './events';
+import { createUnmaskedWebSocketFrame } from './websocketFrames';
 
-function createNetMonServer(serverArgs: ServerArgs): ServerInstance {
+function createNetMonServer(
+  serverArgs: ServerArgs,
+  serverPool: ServerPool
+): ServerInstance {
   const { id, hostname, ip, port, allowOrigin } =
     ServerArgsSchema.parse(serverArgs);
 
   let connectionCountLocal = 0;
+  const connectionCountEmitter = new EventEmitter();
 
   const server = http.createServer((req, res) => {
     // returns Error 403 for HTTP requests from unknown origins
@@ -59,24 +62,31 @@ function createNetMonServer(serverArgs: ServerArgs): ServerInstance {
     );
 
     connectionCountLocal++;
+    connectionCountEmitter.emit(EVENT_TYPES.CONNECTION_COUNT_CHANGED);
 
-    // Listen for WebSocket messages
-    socket.on('data', (data) => {
-      socket.write(
-        createUnmaskedWebSocketFrame(
-          `I received: ${parseMaskedWebSocketFrame(data).payload}`
-        )
-      );
+    // broadcast connection counts on every CONNECTION_COUNT_CHANGED event
+    serverPool.servers.forEach((server) => {
+      server.emitters.connectionCount?.on(EVENT_TYPES.CONNECTION_COUNT_CHANGED, () => {
+        socket.write(
+          createUnmaskedWebSocketFrame(
+            parseEventToString('CONNECTION_COUNT_CHANGED', server)
+          )
+        );
+      });
     });
 
     socket.on('close', () => {
       connectionCountLocal--;
+      connectionCountEmitter.emit(EVENT_TYPES.CONNECTION_COUNT_CHANGED);
     });
 
     socket.on('error', (error) => {
       console.log(error);
       socket.write('HTTP/1.1 500 Internal Server Error\r\n\r\n');
       socket.destroy();
+
+      connectionCountLocal--;
+      connectionCountEmitter.emit(EVENT_TYPES.CONNECTION_COUNT_CHANGED);
     });
   });
 
@@ -101,6 +111,12 @@ function createNetMonServer(serverArgs: ServerArgs): ServerInstance {
 
     get allowOrigin() {
       return allowOrigin;
+    },
+
+    get emitters() {
+      return {
+        connectionCount: connectionCountEmitter,
+      };
     },
 
     getConnections: () =>

@@ -67,13 +67,16 @@ const clientPageServer = createClientPageServer(
   path.join(__dirname, '../public/index.html')
 );
 
-const networkMonitorServer = createNetMonServer({
-  id: 'NetworkMonitor',
-  hostname: 'localhost',
-  ip: '127.0.0.1',
-  port: 8081,
-  allowOrigin: `http://${CLIENT_PAGE_SERVER_DETAILS.hostname}:${CLIENT_PAGE_SERVER_DETAILS.port}`, // client page server address
-});
+const networkMonitorServer = createNetMonServer(
+  {
+    id: 'NetworkMonitor',
+    hostname: 'localhost',
+    ip: '127.0.0.1',
+    port: 8081,
+    allowOrigin: `http://${CLIENT_PAGE_SERVER_DETAILS.hostname}:${CLIENT_PAGE_SERVER_DETAILS.port}`, // client page server address
+  },
+  pool
+);
 
 // start servers
 pool.servers.forEach((server) => server.start());

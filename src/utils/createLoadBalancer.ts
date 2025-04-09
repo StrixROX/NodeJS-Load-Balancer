@@ -1,3 +1,4 @@
+import EventEmitter from 'events';
 import http from 'http';
 
 import type {
@@ -8,6 +9,7 @@ import type {
 } from '../types';
 
 import appAssert from './appAssert';
+import { EVENT_TYPES } from './events';
 
 function createLoadBalancer(
   serverArgs: ServerArgs,
@@ -61,6 +63,8 @@ function createLoadBalancer(
   );
 
   let connectionCountLocal = 0;
+  const connectionCountEmitter = new EventEmitter();
+
   let currentServerIndex = -1;
 
   function getServer(): ServerInstance {
@@ -70,6 +74,7 @@ function createLoadBalancer(
 
   const server = http.createServer((req, res) => {
     connectionCountLocal++;
+    connectionCountEmitter.emit(EVENT_TYPES.CONNECTION_COUNT_CHANGED);
 
     if (req.headers.origin !== allowOrigin) {
       res.statusCode = 403;
@@ -121,6 +126,7 @@ function createLoadBalancer(
 
     res.on('close', () => {
       connectionCountLocal--;
+      connectionCountEmitter.emit(EVENT_TYPES.CONNECTION_COUNT_CHANGED);
       req.socket.destroy();
     });
   });
@@ -148,6 +154,12 @@ function createLoadBalancer(
 
     get allowOrigin() {
       return allowOrigin;
+    },
+
+    get emitters() {
+      return {
+        connectionCount: connectionCountEmitter,
+      };
     },
 
     getConnections: () =>

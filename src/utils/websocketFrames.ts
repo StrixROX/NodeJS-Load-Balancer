@@ -23,20 +23,20 @@ export const parseMaskedWebSocketFrame = (frame: Buffer) => {
 
   // Second byte: Mask bit and Payload length
   // const masked = (frame[1] & 0x80) !== 0; // Check if the payload is masked
-  let payloadLength = frame[1] & 0x7F;
+  const payloadLength = frame[1] & 0x7F;
 
   let offset = 2; // Start after the first two bytes
 
-  // Handle extended payload lengths
-  if (payloadLength === 126) {
-    // 2-byte extended payload length
-    payloadLength = frame.readUInt16BE(offset);
-    offset += 2;
-  } else if (payloadLength === 127) {
-    // 8-byte extended payload length
-    // Note: This example does not handle such a large payload for simplicity
-    throw new Error("Large payloads not supported in this example.");
-  }
+  // // Handle extended payload lengths
+  // if (payloadLength === 126) {
+  //   // 2-byte extended payload length
+  //   payloadLength = frame.readUInt16BE(offset);
+  //   offset += 2;
+  // } else if (payloadLength === 127) {
+  //   // 8-byte extended payload length
+  //   // Note: This example does not handle such a large payload for simplicity
+  //   throw new Error("Large payloads not supported in this example.");
+  // }
 
   // Read masking key (4 bytes)
   const maskingKey = frame.slice(offset, offset + 4);

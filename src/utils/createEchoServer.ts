@@ -1,8 +1,10 @@
+import EventEmitter from 'events';
 import http from 'http';
 
 import type { ServerArgs, ServerInstance } from '../types';
 
 import appAssert from './appAssert';
+import { EVENT_TYPES } from './events';
 
 const DELAY_BEFORE_SENDING_RESPONSE = 0;
 const DELAY_BETWEEN_SENDING_EACH_CHUNK = 20;
@@ -43,9 +45,11 @@ function createEchoServer(serverArgs: ServerArgs): ServerInstance {
   );
 
   let connectionCountLocal = 0;
+  const connectionCountEmitter = new EventEmitter();
 
   const server = http.createServer((req, res) => {
     connectionCountLocal++;
+    connectionCountEmitter.emit(EVENT_TYPES.CONNECTION_COUNT_CHANGED);
 
     if (req.headers.origin !== allowOrigin) {
       res.statusCode = 403;
@@ -88,6 +92,7 @@ function createEchoServer(serverArgs: ServerArgs): ServerInstance {
 
     res.on('close', () => {
       connectionCountLocal--;
+      connectionCountEmitter.emit(EVENT_TYPES.CONNECTION_COUNT_CHANGED);
       req.socket.destroy();
     });
   });
@@ -115,6 +120,12 @@ function createEchoServer(serverArgs: ServerArgs): ServerInstance {
 
     get allowOrigin() {
       return allowOrigin;
+    },
+
+    get emitters() {
+      return {
+        connectionCount: connectionCountEmitter,
+      };
     },
 
     getConnections: () =>
