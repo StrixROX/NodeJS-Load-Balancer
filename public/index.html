@@ -4,14 +4,33 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>My App</title>
+    <style>
+      .level-indicator-container {
+        display: inline-flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 2px;
+        margin-left: 10px;
+      }
+
+      .level-indicator {
+        display: block;
+        background-color: green;
+        width: 6px;
+        aspect-ratio: 1 / 1;
+        border-radius: 100%;
+      }
+    </style>
   </head>
   <body>
     <h1>My App</h1>
 
     <div style="border: 1px solid black; display: inline-block">
-      <h3 style="margin-top: 0px">Network Monitor</h3>
+      <h3 style="display: inline">Network Monitor</h3>
+      <button id="connectButton">Connect Network Monitor</button>
+
       <table id="networkMonitorTable" style="border: none">
-        <thead>
+        <thead id="header">
           <th>Server ID</th>
           <th>Connection count</th>
         </thead>
@@ -25,7 +44,6 @@ arnmodwpbcfnpkkdghtikbneqyxuzhcdlfcpijdeldiytmnwclqawndxievhorlyxdrajuqesutwrlgd
     >
     <button id="sendButton">Send</button>
     <button id="clearButton">Clear Log</button>
-    <button id="testButton">Connect Network Monitor</button>
 
     <pre id="responseLogArea"></pre>
 
@@ -33,7 +51,7 @@ arnmodwpbcfnpkkdghtikbneqyxuzhcdlfcpijdeldiytmnwclqawndxievhorlyxdrajuqesutwrlgd
       const msgInput = document.getElementById('msgInput');
       const sendButton = document.getElementById('sendButton');
       const clearButton = document.getElementById('clearButton');
-      const testButton = document.getElementById('testButton');
+      const connectButton = document.getElementById('connectButton');
       const responseLogArea = document.getElementById('responseLogArea');
       const netMonTable = document.getElementById('networkMonitorTable');
 
@@ -89,6 +107,56 @@ arnmodwpbcfnpkkdghtikbneqyxuzhcdlfcpijdeldiytmnwclqawndxievhorlyxdrajuqesutwrlgd
       });
 
       let ws = null;
+
+      const onInit = (data) => {
+        const { serverId, connectionCount } = data;
+
+        const row = document.createElement('tr');
+        const serverIdCell = document.createElement('td');
+        const connectionCountCell = document.createElement('td');
+
+        serverIdCell.textContent = serverId;
+        connectionCountCell.textContent = connectionCount;
+
+        row.append(serverIdCell);
+        row.append(connectionCountCell);
+
+        netMonTable.append(row);
+      };
+
+      const onCountChange = (data) => {
+        const { serverId, connectionCount } = data;
+
+        const allRows = document.querySelectorAll('tr');
+        const rowIndexWithServerId = Array.from(allRows).findIndex(
+          (el) => el.querySelectorAll('td')[0]?.textContent === serverId
+        );
+        const rowWithServerId = allRows[rowIndexWithServerId];
+
+        if (!rowWithServerId) {
+          return;
+        }
+
+        rowWithServerId.querySelectorAll('td')[1].innerHTML = connectionCount;
+
+        const levelIndicator = createLevelIndicator(connectionCount);
+        rowWithServerId.querySelectorAll('td')[1].appendChild(levelIndicator);
+      };
+
+      const createLevelIndicator = (level) => {
+        const levelIndicatorContainer = document.createElement('div');
+        levelIndicatorContainer.classList.add('level-indicator-container');
+
+        const levelIndicator = document.createElement('div');
+        levelIndicator.classList.add('level-indicator');
+
+        for (let i = 0; i < level; i++) {
+          levelIndicatorContainer.appendChild(levelIndicator.cloneNode());
+        }
+
+        return levelIndicatorContainer;
+      };
+
       const netMonMessageParser = (event) => {
         if (event.data.includes('monitoring')) {
           const [_, serverId, connectionCount] = event.data.match(
@@ -99,17 +167,7 @@ arnmodwpbcfnpkkdghtikbneqyxuzhcdlfcpijdeldiytmnwclqawndxievhorlyxdrajuqesutwrlgd
             return;
           }
 
-          const row = document.createElement('tr');
-          const serverIdCell = document.createElement('td');
-          const connectionCountCell = document.createElement('td');
-
-          serverIdCell.textContent = serverId;
-          connectionCountCell.textContent = connectionCount;
-
-          row.append(serverIdCell);
-          row.append(connectionCountCell);
-
-          netMonTable.append(row);
+          onInit({ serverId, connectionCount });
         } else if (event.data.includes('connectionCount_server')) {
           const [_, serverId, connectionCount] = event.data.match(
             /^connectionCount_server\#(\d+):(\d+)$/
@@ -119,28 +177,18 @@ arnmodwpbcfnpkkdghtikbneqyxuzhcdlfcpijdeldiytmnwclqawndxievhorlyxdrajuqesutwrlgd
             return;
           }
 
-          const allRows = document.querySelectorAll('tr');
-          const rowIndexWithServerId = Array.from(allRows).findIndex(
-            (el) => el.querySelectorAll('td')[0]?.textContent === serverId
-          );
-          const rowWithServerId = allRows[rowIndexWithServerId];
-
-          if (!rowWithServerId) {
-            return;
-          }
-
-          rowWithServerId.querySelectorAll('td')[1].textContent =
-            connectionCount;
+          onCountChange({ serverId, connectionCount });
         }
       };
 
-      testButton.addEventListener('click', () => {
+      connectButton.addEventListener('click', () => {
         if (ws && ws.readyState === 1) {
           return;
         }
         ws = new WebSocket(`ws://localhost:8081/`);
         ws.onopen = (socket, event) => {
           console.log('WebSocket connection opened.');
+          netMonTable.querySelectorAll('tr:not(#header *)').forEach((el) => el.remove());
         };
         ws.onmessage = netMonMessageParser;
         ws.onclose = () => {
